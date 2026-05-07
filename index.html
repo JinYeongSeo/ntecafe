@@ -164,7 +164,6 @@
         .section-header { font-size: 18px; font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
         .section-header::before { content: ''; width: 12px; height: 12px; background: var(--accent-blue); border-radius: 3px; }
 
-        /* 카페 전용 UI 스타일 */
         .cafe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
         .cafe-box {
             background: var(--dashboard-bg); border-radius: 12px; padding: 16px;
@@ -690,7 +689,7 @@ function renderSlot(cafeIdx, slotIdx) {
     return `
     <div class="cafe-slot" onclick="handleSlotClick(${cafeIdx}, ${slotIdx}, event)">
         <img src="./images/${emp}.png" alt="${emp}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
-        <div class="lv-overlay" onclick="event.stopPropagation()">
+        <div class="lv-overlay">
             <div class="lv-btn-grid" style="padding: 0 4px;">
                 ${[1,2,3,4,5].map(v => `<button class="lv-btn ${lv === v ? 'active' : ''}" onclick="setLevel(event, '${emp}', ${v})">${v}</button>`).join('')}
             </div>
@@ -706,13 +705,11 @@ function handleSlotClick(cafeIdx, slotIdx, event) {
     }
 
     if (cafeDataState[cafeIdx][slotIdx]) {
-        // 기존 직원 해제
         cafeDataState[cafeIdx][slotIdx] = null;
         saveData();
         renderCafes();
         renderEmpSummary();
     } else {
-        // 직원 선택 모달 띄우기
         selectingSlot = { cafeIdx, slotIdx };
         renderCharModal();
         document.getElementById('charSelectModal').style.display = 'flex';
@@ -872,7 +869,6 @@ function loadData() {
             if(data.cafeState) {
                 cafeDataState = data.cafeState;
             } else if (data.chars) {
-                // 이전 1차원 데이터 마이그레이션 예외 처리
                 const activeList = Object.keys(data.chars);
                 let ptr = 0;
                 for(let i=0; i<5; i++) {
@@ -1028,9 +1024,8 @@ function runCalculator() {
         let comboRev = 0;
         const details = [];
 
-        // 카페별(인덱스별) 메뉴 독립 연산 모듈화. (로컬 버프 적용을 위한 준비)
         combo.forEach((item, cafeIdx) => {
-            let localPriceBuff = globalPriceBuff; // 나중에 여기서 cafeDataState[cafeIdx] 읽어서 로컬 버프 연산 추가
+            let localPriceBuff = globalPriceBuff; 
             let localTrafficBuff = globalTrafficBuff;
 
             let isTrend = false;
