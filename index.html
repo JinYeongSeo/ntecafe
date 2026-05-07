@@ -176,10 +176,10 @@
             font-weight: 800; font-size: 15px; border-radius: 12px; z-index: 10;
         }
         .cafe-title-wrap { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .cafe-title { font-weight: 800; font-size: 14px; color: var(--text-main); }
+        .cafe-title { font-weight: 800; font-size: 15px; color: var(--text-main); }
         .cafe-info { font-size: 10px; color: var(--text-sub); font-weight: 900; letter-spacing: 1px; }
         
-        .cafe-slots { display: flex; gap: 8px; align-items: flex-start; }
+        .cafe-slots { display: flex; gap: 10px; align-items: flex-start; }
         .cafe-slot {
             flex: 1; border-radius: 8px; background: var(--panel-bg);
             border: 2px solid transparent; cursor: pointer; position: relative; overflow: hidden;
@@ -242,13 +242,14 @@
 
         /* 모바일(터치 지원) 환경 */
         @media (hover: none), (pointer: coarse) {
+            .lv-badge { padding: 10px 0; font-size: 13px; }
             .lv-overlay {
-                position: relative; width: 100%; height: auto;
-                background: #1a1a24; padding: 8px 4px;
+                position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.85); padding: 10px;
             }
-            .lv-title { display: none; } /* 모바일에서는 높이 확보를 위해 타이틀 숨김 */
-            .lv-btn-grid { gap: 2px; }
-            .lv-btn { padding: 6px 0; font-size: 13px; border-color: #444; }
+            .lv-title { display: block; font-size: 13px; margin-bottom: 10px; text-align: center; }
+            .lv-btn-grid { gap: 6px; }
+            .lv-btn { padding: 12px 0; font-size: 16px; border-color: #444; }
         }
 
         .emp-summary-box {
@@ -342,7 +343,7 @@
         .detail-content.show { display: block; animation: slideDown 0.2s ease-out; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-        .modal-overlay {
+        .modal-overlay-sys {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--modal-bg); display: none; justify-content: center; align-items: center; z-index: 100;
         }
@@ -373,7 +374,10 @@
             .main-layout { grid-template-columns: 1fr; }
             header { flex-direction: column; gap: 15px; text-align: center; padding: 15px; }
             .item-grid { grid-template-columns: repeat(2, 1fr); }
-            .cafe-grid { grid-template-columns: repeat(2, 1fr); }
+            
+            /* 핵심: 모바일에서는 카페 박스를 1열로 배치하여 좌우 텍스트 짤림 방지 */
+            .cafe-grid { grid-template-columns: 1fr; } 
+            
             body { padding: 10px; }
             .timer-wrap { flex-direction: column; }
         }
@@ -381,7 +385,7 @@
 </head>
 <body>
 
-<div class="modal-overlay" id="formulaModal" onclick="closeModal(event)">
+<div class="modal-overlay-sys" id="formulaModal" onclick="closeModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="modal-header">
             계산식 안내
@@ -405,7 +409,7 @@
     </div>
 </div>
 
-<div class="modal-overlay" id="charSelectModal" onclick="closeCharModal(event)">
+<div class="modal-overlay-sys" id="charSelectModal" onclick="closeCharModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="modal-header">
             직원 선택
@@ -741,7 +745,7 @@ function renderSlot(cafeIdx, slotIdx) {
         
         <div class="lv-overlay" id="overlay_${cafeIdx}_${slotIdx}" onclick="event.stopPropagation()">
             <div class="lv-title">레벨 설정</div>
-            <div class="lv-btn-grid" style="padding: 0 2px;">
+            <div class="lv-btn-grid">
                 ${[1,2,3,4,5].map(v => `<button class="lv-btn ${lv === v ? 'active' : ''}" onclick="setLevel(event, '${emp}', ${v})">${v}</button>`).join('')}
             </div>
         </div>
