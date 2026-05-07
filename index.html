@@ -164,31 +164,52 @@
         .section-header { font-size: 18px; font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
         .section-header::before { content: ''; width: 12px; height: 12px; background: var(--accent-blue); border-radius: 3px; }
 
-        .char-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
-
+        /* 카페 전용 UI 스타일 */
+        .cafe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+        .cafe-box {
+            background: var(--dashboard-bg); border-radius: 12px; padding: 16px;
+            border: 1px solid var(--border-color); position: relative;
+        }
+        .cafe-box.locked { opacity: 0.4; pointer-events: none; }
+        .cafe-box.locked::after {
+            content: "🔒 해금 필요"; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.3); color: #fff; display: flex; justify-content: center; align-items: center;
+            font-weight: 800; font-size: 15px; border-radius: 12px; z-index: 10;
+        }
+        .cafe-title-wrap { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .cafe-title { font-weight: 800; font-size: 14px; color: var(--text-main); }
+        .cafe-info { font-size: 10px; color: var(--text-sub); font-weight: 900; letter-spacing: 1px; }
+        .cafe-slots { display: flex; gap: 8px; }
+        .cafe-slot {
+            flex: 1; aspect-ratio: 1; border-radius: 8px; background: var(--panel-bg);
+            border: 2px solid transparent; cursor: pointer; position: relative; overflow: hidden;
+            display: flex; justify-content: center; align-items: center; box-shadow: var(--card-shadow);
+        }
+        .cafe-slot.empty { border: 2px dashed var(--border-color); box-shadow: none; }
+        .cafe-slot.empty::after { content: '+'; font-size: 32px; color: var(--border-color); font-weight: 300; }
+        .cafe-slot img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .char-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; }
         .char-card {
             background: var(--dashboard-bg); border: 2px solid var(--border-color);
             border-radius: 12px; overflow: hidden; cursor: pointer; position: relative;
-            box-shadow: var(--card-shadow); user-select: none;
+            box-shadow: var(--card-shadow); user-select: none; transition: 0.2s;
         }
+        .char-card:hover { border-color: var(--accent-blue); }
         .char-img { width: 100%; aspect-ratio: 1; background-color: #ccc; object-fit: cover; display: block; }
         .char-info { padding: 10px; text-align: center; }
-        .char-name { font-weight: 700; font-size: 14px; color: var(--text-main); }
-
-        .char-card.active { border-color: var(--accent-blue); box-shadow: 0 0 0 2px var(--accent-blue); }
-        .char-card.active .char-info { background: var(--accent-blue); }
-        .char-card.active .char-name { color: white; }
+        .char-name { font-weight: 700; font-size: 13px; color: var(--text-main); }
 
         .lv-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); display: none; flex-direction: column; justify-content: center; align-items: center; gap: 4px; padding: 10px;
         }
-        .char-card.active:hover .lv-overlay { display: flex; }
+        .cafe-slot:not(.empty):hover .lv-overlay { display: flex; }
 
         .lv-btn-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; width: 100%; }
         .lv-btn {
-            width: 100%; padding: 6px 0; background: #333; color: white; border: 1px solid #555;
-            border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold;
+            width: 100%; padding: 8px 0; background: #333; color: white; border: 1px solid #555;
+            border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold;
         }
         .lv-btn:hover { background: #555; }
         .lv-btn.active { background: var(--accent-blue); border-color: var(--accent-blue); }
@@ -233,7 +254,7 @@
             padding: 4px 8px; font-size: 11px; font-weight: bold; box-shadow: 0 2px 5px rgba(255, 71, 87, 0.4); z-index: 10;
         }
 
-        .item-card-top { height: 24px; background: #5352ed; }
+        .item-card-top { height: 26px; background: #5352ed; display:flex; justify-content:center; align-items:center; color:#fff; font-size:12px; font-weight:800; }
         .item-card.is-red .item-card-top { background: #ff6b81; }
 
         .item-img-wrap {
@@ -293,6 +314,7 @@
             border-radius: 16px; box-shadow: var(--shadow); overflow: hidden;
             animation: popIn 0.3s ease;
         }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         
         .modal-header {
             padding: 20px; background: var(--dashboard-bg); font-size: 18px; font-weight: 800;
@@ -314,7 +336,7 @@
             .main-layout { grid-template-columns: 1fr; }
             header { flex-direction: column; gap: 15px; text-align: center; padding: 15px; }
             .item-grid { grid-template-columns: repeat(2, 1fr); }
-            .char-grid { grid-template-columns: repeat(3, 1fr); }
+            .cafe-grid { grid-template-columns: repeat(2, 1fr); }
             body { padding: 10px; }
             .timer-wrap { flex-direction: column; }
         }
@@ -342,6 +364,18 @@
                 ※ 우미츠키의 트래픽 1% 증가는 기본 트래픽(2400)을 기준으로 24가 고정 적용됩니다.<br>
                 ※ 사키리의 5레벨 추가 단가 버프는 '동일 카테고리 상품이 3개 이상'일 때 발동됩니다.
             </p>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="charSelectModal" onclick="closeCharModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            직원 선택
+            <button class="modal-close" onclick="closeCharModal()">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 16px;">
+            <div class="char-grid" id="modalCharGrid"></div>
         </div>
     </div>
 </div>
@@ -397,9 +431,10 @@
         <div class="section-box">
             <div class="section-header">직원 배치</div>
             <div style="font-size: 13px; color: var(--text-sub); margin-bottom: 16px;">
-                * 해금된 카페 수에 따라 배치 인원이 제한됩니다. 한 번 클릭 시 이전 설정 레벨로 활성화되며, 카드 내 빈 공간을 누르면 해제됩니다.
+                * 해금된 카페 수에 따라 블록이 열립니다. 빈 슬롯을 눌러 직원을 배치하고, 카드 내 빈 공간을 누르면 해제됩니다.
             </div>
-            <div class="char-grid" id="charGrid"></div>
+            
+            <div class="cafe-grid" id="cafeGrid"></div>
             
             <div class="emp-summary-box" id="empSummaryBox">
                 <div class="emp-summary-title">현재 적용된 직원 버프 상세</div>
@@ -460,10 +495,15 @@
 </footer>
 
 <script>
-let activeChars = {}; 
+const CAFE_NAMES = ["(푸른 수염길점)", "(바로크 거리점)", "(스위트 피어 거리점)", "(무민 거리점)", "(반각 거리점)"];
+
+let cafeDataState = [
+    [null, null], [null, null], [null, null], [null, null], [null, null]
+];
 let charLvHistory = {}; 
 let lastCalculatedPonz = 0; 
 let targetLevelUpDate = null; 
+let selectingSlot = null;
 
 const RAW_ITEMS = [
     [1, "구운 코코넛 라떼", "음료", 2.4, 1, 10.2, 22, "코코넛", "「9℃」 커피 원두", "", "", ""],
@@ -584,36 +624,13 @@ function initUI() {
     const trSelect = document.getElementById("trendSelect");
     TREND_LIST.forEach(t => trSelect.add(new Option(t, t)));
 
-    const grid = document.getElementById("charGrid");
-    let html = '';
-    EMP_LIST.forEach(emp => {
-        html += `
-        <div class="char-card" id="card_${emp}" onclick="toggleChar('${emp}')">
-            <img src="./images/${emp}.png" class="char-img" alt="${emp}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
-            <div class="char-info"><div class="char-name">${emp}</div></div>
-            <div class="lv-overlay" id="lv_wrap_${emp}">
-                <div class="lv-btn-grid">
-                    ${[1,2,3,4,5].map(v => `<button class="lv-btn" id="btn_${emp}_${v}" onclick="setLv(event, '${emp}', ${v})">${v}</button>`).join('')}
-                </div>
-            </div>
-        </div>`;
-    });
-    grid.innerHTML = html;
-
     loadData();
+    renderCafes();
     
     window.addEventListener('storage', function(e) {
         if (e.key === 'cafeData') {
-            EMP_LIST.forEach(emp => {
-                const card = document.getElementById(`card_${emp}`);
-                if(card) card.classList.remove('active');
-                for (let i = 1; i <= 5; i++) {
-                    const btn = document.getElementById(`btn_${emp}_${i}`);
-                    if(btn) btn.classList.remove('active');
-                }
-            });
-            activeChars = {};
             loadData();
+            renderCafes();
         }
     });
 }
@@ -628,6 +645,7 @@ function handleLevelChange(lv, skipSave = false) {
         trendSel.disabled = true;
         trendSel.options[0].text = "트렌드 없음 (Lv.20 이상 해금)";
     }
+    renderCafes();
     if (!skipSave) saveData();
 }
 
@@ -636,65 +654,139 @@ function getUnlockedSlots(lv) {
     if (lv >= 17) return 4;
     if (lv >= 10) return 3;
     if (lv >= 5)  return 2;
-    return 1;
+    if (lv >= 1)  return 1;
+    return 0;
 }
 
-function toggleChar(emp) {
+function renderCafes() {
+    const level = parseInt(document.getElementById("userLevel").value) || 0;
+    const unlocked = getUnlockedSlots(level);
+    const grid = document.getElementById("cafeGrid");
+    let html = '';
+
+    for (let i = 0; i < 5; i++) {
+        const isLocked = i >= unlocked;
+        html += `
+        <div class="cafe-box ${isLocked ? 'locked' : ''}">
+            <div class="cafe-title-wrap">
+                <div class="cafe-title">${CAFE_NAMES[i]}</div>
+                <div class="cafe-info">INFORMATION.</div>
+            </div>
+            <div class="cafe-slots">
+                ${renderSlot(i, 0)}
+                ${renderSlot(i, 1)}
+            </div>
+        </div>`;
+    }
+    grid.innerHTML = html;
+}
+
+function renderSlot(cafeIdx, slotIdx) {
+    const emp = cafeDataState[cafeIdx][slotIdx];
+    if (!emp) {
+        return `<div class="cafe-slot empty" onclick="handleSlotClick(${cafeIdx}, ${slotIdx}, event)"></div>`;
+    }
+    const lv = charLvHistory[emp] || 5;
+    return `
+    <div class="cafe-slot" onclick="handleSlotClick(${cafeIdx}, ${slotIdx}, event)">
+        <img src="./images/${emp}.png" alt="${emp}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
+        <div class="lv-overlay" onclick="event.stopPropagation()">
+            <div class="lv-btn-grid" style="padding: 0 4px;">
+                ${[1,2,3,4,5].map(v => `<button class="lv-btn ${lv === v ? 'active' : ''}" onclick="setLevel(event, '${emp}', ${v})">${v}</button>`).join('')}
+            </div>
+        </div>
+    </div>`;
+}
+
+function handleSlotClick(cafeIdx, slotIdx, event) {
     const level = parseInt(document.getElementById("userLevel").value);
     if (isNaN(level)) { 
         alert("관리 레벨을 먼저 선택해 주시기 바랍니다."); 
         return; 
     }
 
-    const maxChars = getUnlockedSlots(level) * 2;
-    const card = document.getElementById(`card_${emp}`);
-
-    if (activeChars[emp]) {
-        delete activeChars[emp];
-        card.classList.remove('active');
+    if (cafeDataState[cafeIdx][slotIdx]) {
+        // 기존 직원 해제
+        cafeDataState[cafeIdx][slotIdx] = null;
+        saveData();
+        renderCafes();
+        renderEmpSummary();
     } else {
-        if (Object.keys(activeChars).length >= maxChars) {
-            alert(`현재 레벨(Lv.${level})에서는 해금된 카페 수 제한으로 최대 ${maxChars}명까지만 배치할 수 있습니다. 관리 레벨을 먼저 올려주세요.`);
-            return;
-        }
-        activeChars[emp] = charLvHistory[emp] || 5; 
-        charLvHistory[emp] = activeChars[emp];
-        card.classList.add('active');
+        // 직원 선택 모달 띄우기
+        selectingSlot = { cafeIdx, slotIdx };
+        renderCharModal();
+        document.getElementById('charSelectModal').style.display = 'flex';
     }
-    updateLvUI(emp);
-    saveData();
-    renderEmpSummary();
 }
 
-function setLv(e, emp, lv) {
+function renderCharModal() {
+    const grid = document.getElementById("modalCharGrid");
+    const placedChars = cafeDataState.flat().filter(Boolean);
+    let html = '';
+
+    EMP_LIST.forEach(emp => {
+        if(placedChars.includes(emp)) return;
+        html += `
+        <div class="char-card" onclick="selectCharForSlot('${emp}')">
+            <img src="./images/${emp}.png" class="char-img" alt="${emp}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
+            <div class="char-info"><div class="char-name">${emp}</div></div>
+        </div>`;
+    });
+    
+    if (html === '') html = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: var(--text-sub);">배치할 직원이 없습니다.</div>';
+    grid.innerHTML = html;
+}
+
+function selectCharForSlot(emp) {
+    if(selectingSlot) {
+        cafeDataState[selectingSlot.cafeIdx][selectingSlot.slotIdx] = emp;
+        if(!charLvHistory[emp]) charLvHistory[emp] = 5;
+        saveData();
+        renderCafes();
+        renderEmpSummary();
+        closeCharModal();
+    }
+}
+
+function closeCharModal(e) {
+    if(!e || e.target === document.getElementById('charSelectModal') || e.target.className === 'modal-close') {
+        document.getElementById('charSelectModal').style.display = 'none';
+        selectingSlot = null;
+    }
+}
+
+function setLevel(e, emp, lv) {
     e.stopPropagation();
-    if (!activeChars[emp]) return;
-    activeChars[emp] = lv;
     charLvHistory[emp] = lv; 
-    updateLvUI(emp);
     saveData();
+    renderCafes();
     renderEmpSummary();
 }
 
-function updateLvUI(emp) {
-    for (let i = 1; i <= 5; i++) {
-        const btn = document.getElementById(`btn_${emp}_${i}`);
-        if (activeChars[emp] === i) btn.classList.add('active');
-        else btn.classList.remove('active');
+function getActiveCharsMap() {
+    const level = parseInt(document.getElementById("userLevel").value) || 0;
+    const unlocked = getUnlockedSlots(level);
+    const active = {};
+    for(let i = 0; i < unlocked; i++) {
+        cafeDataState[i].forEach(emp => {
+            if(emp) active[emp] = charLvHistory[emp] || 5;
+        });
     }
+    return active;
 }
 
 function renderEmpSummary() {
     const box = document.getElementById("empSummaryBox");
     const grid = document.getElementById("empSummaryGrid");
+    const activeMap = getActiveCharsMap();
     
-    if (Object.keys(activeChars).length === 0) {
+    if (Object.keys(activeMap).length === 0) {
         box.classList.remove("show");
         return;
     }
 
     let html = '';
-    for (const [n, l] of Object.entries(activeChars)) {
+    for (const [n, l] of Object.entries(activeMap)) {
         let pBuff = 0; let tBuff = 0;
         let condStr = "";
         if (n === "민트" || n === "아들러") {
@@ -720,7 +812,7 @@ function renderEmpSummary() {
             if (l >= 1) pBuff += 0.12; 
             if (l >= 5) {
                 pBuff += 0.3;
-                condStr += "<br><span style='font-size:11px; color:#888;'>(동일 카테고리 3개 시 적용)</span>";
+                condStr += "<br><span style='font-size:11px; color:#888;'>(동일 카테고 3개 시 적용)</span>";
             }
         }
 
@@ -746,7 +838,7 @@ function saveData() {
     const data = {
         level: document.getElementById("userLevel").value,
         trend: document.getElementById("trendSelect").value,
-        chars: activeChars,
+        cafeState: cafeDataState,
         history: charLvHistory,
         lvlUpTime: targetLevelUpDate ? targetLevelUpDate.getTime() : null,
         calcExpTotal: document.getElementById('calcExpTotal').value,
@@ -777,17 +869,16 @@ function loadData() {
             if(data.calcPopPreset) document.getElementById('calcPopPreset').value = data.calcPopPreset;
             if(data.calcPonz) document.getElementById('calcPonz').value = data.calcPonz;
             
-            if(data.chars) {
-                activeChars = data.chars;
-                for(let emp in activeChars) {
-                    const card = document.getElementById(`card_${emp}`);
-                    if(card) {
-                        card.classList.add('active');
-                        updateLvUI(emp);
-                    }
+            if(data.cafeState) {
+                cafeDataState = data.cafeState;
+            } else if (data.chars) {
+                // 이전 1차원 데이터 마이그레이션 예외 처리
+                const activeList = Object.keys(data.chars);
+                let ptr = 0;
+                for(let i=0; i<5; i++) {
+                    if(ptr < activeList.length) cafeDataState[i][0] = activeList[ptr++];
+                    if(ptr < activeList.length) cafeDataState[i][1] = activeList[ptr++];
                 }
-            } else {
-                activeChars = {};
             }
         } catch(e) {}
     }
@@ -892,52 +983,56 @@ function runCalculator() {
 
     const allCombos = getCombinations(availableItems, slots);
     let comboList = []; 
+    const currentActiveMap = getActiveCharsMap();
 
     allCombos.forEach(combo => {
         let mainCount = combo.filter(item => item.category === "메인메뉴").length;
         let drinkCount = combo.filter(item => item.category === "음료").length;
         let dessertCount = combo.filter(item => item.category === "디저트").length;
         
-        let priceBuff = 0, trafficBuff = 0;
+        let globalPriceBuff = 0, globalTrafficBuff = 0;
 
-        for (const [n, l] of Object.entries(activeChars)) {
+        for (const [n, l] of Object.entries(currentActiveMap)) {
             if (n === "민트" || n === "아들러") {
-                if (l >= 1) priceBuff += 0.12;
-                if (l >= 5) priceBuff += 0.18;
+                if (l >= 1) globalPriceBuff += 0.12;
+                if (l >= 5) globalPriceBuff += 0.18;
             }
             if (n === "하니엘") {
-                if (l >= 1) priceBuff += 0.12;
-                if (l >= 3) priceBuff += 0.12;
-                if (l >= 5) priceBuff += 0.18;
+                if (l >= 1) globalPriceBuff += 0.12;
+                if (l >= 3) globalPriceBuff += 0.12;
+                if (l >= 5) globalPriceBuff += 0.18;
             }
             if (n === "나나리") {
-                if (l >= 1 && mainCount >= 1) priceBuff += 0.2;
-                if (l >= 5 && mainCount >= 2) priceBuff += 0.3;
+                if (l >= 1 && mainCount >= 1) globalPriceBuff += 0.2;
+                if (l >= 5 && mainCount >= 2) globalPriceBuff += 0.3;
             }
             if (n === "스키아" || n === "치즈" || n === "백장" || n === "다포딜") {
-                if (l >= 1) trafficBuff += 18;
-                if (l >= 5) trafficBuff += 27;
+                if (l >= 1) globalTrafficBuff += 18;
+                if (l >= 5) globalTrafficBuff += 27;
             }
             if (n === "에드가") {
-                if (l >= 1) trafficBuff += 18;
-                if (l >= 3) trafficBuff += 18;
-                if (l >= 5) trafficBuff += 27;
+                if (l >= 1) globalTrafficBuff += 18;
+                if (l >= 3) globalTrafficBuff += 18;
+                if (l >= 5) globalTrafficBuff += 27;
             }
             if (n === "우미츠키") {
-                if (l >= 1) priceBuff += 0.12;
-                if (l >= 3) trafficBuff += 24; 
+                if (l >= 1) globalPriceBuff += 0.12;
+                if (l >= 3) globalTrafficBuff += 24; 
             }
             if (n === "사키리") {
-                if (l >= 1) priceBuff += 0.12;
-                if (l >= 5 && (mainCount >= 3 || drinkCount >= 3 || dessertCount >= 3)) priceBuff += 0.3;
+                if (l >= 1) globalPriceBuff += 0.12;
+                if (l >= 5 && (mainCount >= 3 || drinkCount >= 3 || dessertCount >= 3)) globalPriceBuff += 0.3;
             }
         }
 
-        const totalTraffic = 2400 + trafficBuff;
         let comboRev = 0;
         const details = [];
 
-        combo.forEach(item => {
+        // 카페별(인덱스별) 메뉴 독립 연산 모듈화. (로컬 버프 적용을 위한 준비)
+        combo.forEach((item, cafeIdx) => {
+            let localPriceBuff = globalPriceBuff; // 나중에 여기서 cafeDataState[cafeIdx] 읽어서 로컬 버프 연산 추가
+            let localTrafficBuff = globalTrafficBuff;
+
             let isTrend = false;
             if (trend) {
                 isTrend = trend.startsWith("과일") ? 
@@ -946,17 +1041,20 @@ function runCalculator() {
             }
             
             const trendBonus = isTrend ? 0.75 : 0;
-            const finalPrice = item.basePrice + priceBuff + trendBonus;
+            const finalPrice = item.basePrice + localPriceBuff + trendBonus;
+            const totalTraffic = 2400 + localTrafficBuff;
             const hourlyRev = finalPrice * (totalTraffic / 100);
             
             comboRev += hourlyRev;
             details.push({
-                name: item.name, category: item.category, base: item.basePrice, final: finalPrice, isTrend, rev: hourlyRev, priceUpLevel: item.priceUpLevel
+                cafeName: CAFE_NAMES[cafeIdx],
+                name: item.name, category: item.category, base: item.basePrice, final: finalPrice, isTrend, rev: hourlyRev, priceUpLevel: item.priceUpLevel,
+                appliedPriceBuff: localPriceBuff
             });
         });
 
         const finalRev = Math.round((comboRev + Number.EPSILON) * 100) / 100;
-        comboList.push({ rev: finalRev, details, priceBuff, totalTraffic });
+        comboList.push({ rev: finalRev, details, globalPriceBuff, totalTraffic: 2400 + globalTrafficBuff });
     });
 
     comboList.sort((a, b) => b.rev - a.rev);
@@ -967,7 +1065,6 @@ function runCalculator() {
     verifySum = Math.round((verifySum + Number.EPSILON) * 100) / 100;
     
     if(verifySum === absoluteBest.rev) {
-        console.log("교차 검증 완료: 수익 무결성 확인됨");
         lastCalculatedPonz = absoluteBest.rev; 
         renderData(absoluteBest.rev, absoluteBest);
     } else {
@@ -984,7 +1081,7 @@ function renderData(total, data) {
         <div class="result-stats">
             <div style="font-weight:700; color:var(--text-sub);">최고 예상 수익</div>
             <div class="total-rev">${total.toFixed(2)} <span>폰즈</span></div>
-            <div style="font-size:13px; font-weight:700; color:var(--text-sub);">트래픽: ${data.totalTraffic}p | 직원 버프: +${data.priceBuff.toFixed(2)}</div>
+            <div style="font-size:13px; font-weight:700; color:var(--text-sub);">전체 트래픽: ${data.totalTraffic}p | 글로벌 버프: +${data.globalPriceBuff.toFixed(2)}</div>
         </div>
         <div class="item-grid">
     `;
@@ -998,7 +1095,7 @@ function renderData(total, data) {
         
         html += `
             <div class="item-card ${trendClass} ${headerColorClass}">
-                <div class="item-card-top"></div>
+                <div class="item-card-top">${it.cafeName}</div>
                 <div class="item-img-wrap">
                     ${trendTag}
                     <div class="item-img-inner">
@@ -1021,8 +1118,8 @@ function renderData(total, data) {
                         <span>${it.base.toFixed(2)}</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:var(--yellow-text);">
-                        <span>직원 버프</span>
-                        <span>+${data.priceBuff.toFixed(2)}</span>
+                        <span>적용 버프</span>
+                        <span>+${it.appliedPriceBuff.toFixed(2)}</span>
                     </div>
                     ${it.isTrend ? `<div style="display:flex; justify-content:space-between; margin-bottom:4px; color:var(--trend-bg);">
                         <span>트렌드 보너스</span>
