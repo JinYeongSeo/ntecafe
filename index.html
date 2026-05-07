@@ -127,6 +127,14 @@
         select:focus { border-color: var(--accent-blue); }
         select:disabled { opacity: 0.6; cursor: not-allowed; }
 
+        .calc-input {
+            width: 100%; padding: 12px;
+            background-color: var(--dashboard-bg); border: 1px solid var(--border-color);
+            color: var(--text-main); border-radius: 8px; font-size: 14px; font-weight: 600;
+            outline: none; box-sizing: border-box;
+        }
+        .calc-input:focus { border-color: var(--accent-blue); }
+
         .btn-calc {
             background: linear-gradient(135deg, var(--accent-blue), #3b44a8);
             color: white; border: none; padding: 18px; border-radius: 12px;
@@ -138,12 +146,13 @@
         .btn-calc .bg-text { animation-duration: 8s; font-size: 30px; }
         .btn-calc:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(74, 85, 209, 0.4); }
 
+        .timer-wrap { display: flex; gap: 10px; margin-top: auto; }
         .timer-box {
-            background: #1a1a24; border-radius: 8px; padding: 12px;
-            text-align: center; border: 1px solid #333; margin-top: auto;
+            flex: 1; background: #1a1a24; border-radius: 8px; padding: 12px 8px;
+            text-align: center; border: 1px solid #333;
         }
-        .timer-label { font-size: 12px; color: #888; font-weight: 600; margin-bottom: 4px; }
-        .timer-value { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: 2px; }
+        .timer-label { font-size: 11px; color: #888; font-weight: 600; margin-bottom: 4px; }
+        .timer-value { font-size: 16px; font-weight: 800; color: #fff; letter-spacing: 1px; }
 
         .content-area { display: flex; flex-direction: column; gap: 24px; }
 
@@ -176,12 +185,32 @@
         }
         .char-card.active:hover .lv-overlay { display: flex; }
 
+        .lv-btn-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; width: 100%; }
         .lv-btn {
-            width: 100%; padding: 4px 0; background: #333; color: white; border: 1px solid #555;
+            width: 100%; padding: 6px 0; background: #333; color: white; border: 1px solid #555;
             border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold;
         }
         .lv-btn:hover { background: #555; }
         .lv-btn.active { background: var(--accent-blue); border-color: var(--accent-blue); }
+
+        .emp-summary-box {
+            background: var(--dashboard-bg); border-radius: 12px; padding: 16px; 
+            margin-top: 16px; display: none; border: 1px solid var(--border-color);
+        }
+        .emp-summary-box.show { display: block; animation: slideDown 0.2s ease-out; }
+        .emp-summary-title { font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        .emp-summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+        
+        .emp-stat-item {
+            background: var(--panel-bg); padding: 10px; border-radius: 8px; font-size: 13px; border: 1px solid var(--border-color);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .emp-stat-icon {
+            width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+            border: 2px solid var(--border-color); background: #ccc;
+        }
+        .emp-stat-content { flex: 1; }
+        .emp-stat-name { font-weight: 800; color: var(--accent-blue); margin-bottom: 4px; }
 
         #resultContainer { display: none; }
         
@@ -287,6 +316,7 @@
             .item-grid { grid-template-columns: repeat(2, 1fr); }
             .char-grid { grid-template-columns: repeat(3, 1fr); }
             body { padding: 10px; }
+            .timer-wrap { flex-direction: column; }
         }
     </style>
 </head>
@@ -309,7 +339,8 @@
                 1시간 총 수익 = 모든 메뉴의 '시간당 메뉴 수익'을 합산한 후 소수점 셋째 자리에서 반올림하여 계산됩니다.
             </div>
             <p style="margin-top:15px; font-size: 12px; color: var(--text-sub);">
-                ※ 우미츠키의 트래픽 1% 증가는 기본 트래픽(2400)을 기준으로 24가 고정 적용됩니다.
+                ※ 우미츠키의 트래픽 1% 증가는 기본 트래픽(2400)을 기준으로 24가 고정 적용됩니다.<br>
+                ※ 사키리의 5레벨 추가 단가 버프는 '동일 카테고리 상품이 3개 이상'일 때 발동됩니다.
             </p>
         </div>
     </div>
@@ -344,9 +375,15 @@
             </div>
         </div>
         
-        <div class="timer-box">
-            <div class="timer-label">일일 초기화 남은 시간</div>
-            <div class="timer-value" id="resetTimer">00:00:00</div>
+        <div class="timer-wrap">
+            <div class="timer-box">
+                <div class="timer-label">일일 초기화</div>
+                <div class="timer-value" id="resetTimer">00:00:00</div>
+            </div>
+            <div class="timer-box">
+                <div class="timer-label">레벨업 예상</div>
+                <div class="timer-value" id="levelUpTimer" style="color:#888;">--:--:--</div>
+            </div>
         </div>
 
         <button class="btn-calc" onclick="runCalculator()">
@@ -363,9 +400,55 @@
                 * 해금된 카페 수에 따라 배치 인원이 제한됩니다. 한 번 클릭 시 이전 설정 레벨로 활성화되며, 카드 내 빈 공간을 누르면 해제됩니다.
             </div>
             <div class="char-grid" id="charGrid"></div>
+            
+            <div class="emp-summary-box" id="empSummaryBox">
+                <div class="emp-summary-title">현재 적용된 직원 버프 상세</div>
+                <div class="emp-summary-grid" id="empSummaryGrid"></div>
+            </div>
         </div>
 
         <div class="section-box" id="resultContainer"></div>
+
+        <div class="section-box" id="levelUpCalcSection">
+            <div class="section-header">레벨업 예상 시간 계산기</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px; align-items: flex-end;">
+                <div style="display:flex; gap:10px;">
+                    <div style="flex:1;">
+                        <span class="input-label" style="color:var(--text-main);">전체 경험치</span>
+                        <input type="number" id="calcExpTotal" class="calc-input" placeholder="예: 20000">
+                    </div>
+                    <div style="flex:1;">
+                        <span class="input-label" style="color:var(--text-main);">현재 경험치</span>
+                        <input type="number" id="calcExpCur" class="calc-input" placeholder="예: 12081">
+                    </div>
+                </div>
+                <div>
+                    <span class="input-label" style="color:var(--text-main);">인기도 보정치</span>
+                    <div style="display:flex; gap:8px;">
+                        <select id="calcPopPreset" style="flex:1; padding:12px; font-size:13px; background:var(--dashboard-bg); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; outline:none; cursor:pointer;" onchange="document.getElementById('calcPop').value = this.value">
+                            <option value="0">직접 입력 (0)</option>
+                            <option value="0.065">카페 1개 (0.065)</option>
+                            <option value="0.130">카페 2개 (0.130)</option>
+                            <option value="0.195">카페 3개 (0.195)</option>
+                            <option value="0.260">카페 4개 (0.260)</option>
+                            <option value="0.325">카페 5개 (0.325)</option>
+                        </select>
+                        <input type="number" id="calcPop" class="calc-input" placeholder="0.325" step="0.001" style="flex:1;">
+                    </div>
+                </div>
+                <div>
+                    <span class="input-label" style="color:var(--text-main); display:flex; justify-content:space-between; align-items:center;">
+                        시간당 폰즈
+                        <button onclick="syncPonz()" style="background:var(--accent-blue); color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer;">최고 매출 연동</button>
+                    </span>
+                    <input type="number" id="calcPonz" class="calc-input" placeholder="예: 1181.43" step="0.01">
+                </div>
+            </div>
+            <button onclick="calcLevelUpTime()" style="width:100%; padding:14px; border-radius:8px; background:var(--accent-blue); color:#fff; border:none; font-weight:800; cursor:pointer; font-size:15px; transition:0.2s;">
+                타이머에 적용 및 예상 시간 확인
+            </button>
+            <div id="levelUpResult" style="margin-top:16px; font-size:14px; color:var(--text-sub); text-align:center; display:none; background:var(--dashboard-bg); padding:16px; border-radius:8px; border:1px solid var(--border-color);"></div>
+        </div>
     </div>
 </div>
 
@@ -379,6 +462,8 @@
 <script>
 let activeChars = {}; 
 let charLvHistory = {}; 
+let lastCalculatedPonz = 0; 
+let targetLevelUpDate = null; 
 
 const RAW_ITEMS = [
     [1, "구운 코코넛 라떼", "음료", 2.4, 1, 10.2, 22, "코코넛", "「9℃」 커피 원두", "", "", ""],
@@ -448,17 +533,36 @@ function updateCountdown() {
 
     const nextReset = new Date(kstNow);
     nextReset.setHours(12, 0, 0, 0);
-
-    if (kstNow.getHours() >= 12) {
-        nextReset.setDate(nextReset.getDate() + 1);
-    }
+    if (kstNow.getHours() >= 12) nextReset.setDate(nextReset.getDate() + 1);
 
     const diff = nextReset - kstNow;
     const h = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
     const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
     const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
-
     document.getElementById('resetTimer').innerText = `${h}:${m}:${s}`;
+
+    const lvlTimerEl = document.getElementById('levelUpTimer');
+    if (targetLevelUpDate) {
+        const nowMs = Date.now();
+        const targetMs = targetLevelUpDate.getTime();
+        if (nowMs >= targetMs) {
+            lvlTimerEl.innerText = "LEVEL UP!";
+            lvlTimerEl.style.color = "var(--yellow-text)";
+        } else {
+            const lDiff = targetMs - nowMs;
+            const lD = Math.floor(lDiff / (1000 * 60 * 60 * 24));
+            const lH = Math.floor((lDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+            const lM = Math.floor((lDiff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+            const lS = Math.floor((lDiff % (1000 * 60)) / 1000).toString().padStart(2, '0');
+            
+            if(lD > 0) lvlTimerEl.innerText = `${lD}일 ${lH}:${lM}:${lS}`;
+            else lvlTimerEl.innerText = `${lH}:${lM}:${lS}`;
+            lvlTimerEl.style.color = "#fff";
+        }
+    } else {
+        lvlTimerEl.innerText = "--:--:--";
+        lvlTimerEl.style.color = "#888";
+    }
 }
 setInterval(updateCountdown, 1000);
 
@@ -544,6 +648,7 @@ function toggleChar(emp) {
     }
     updateLvUI(emp);
     saveData();
+    renderEmpSummary();
 }
 
 function setLv(e, emp, lv) {
@@ -553,6 +658,7 @@ function setLv(e, emp, lv) {
     charLvHistory[emp] = lv; 
     updateLvUI(emp);
     saveData();
+    renderEmpSummary();
 }
 
 function updateLvUI(emp) {
@@ -563,12 +669,71 @@ function updateLvUI(emp) {
     }
 }
 
+function renderEmpSummary() {
+    const box = document.getElementById("empSummaryBox");
+    const grid = document.getElementById("empSummaryGrid");
+    
+    if (Object.keys(activeChars).length === 0) {
+        box.classList.remove("show");
+        return;
+    }
+
+    let html = '';
+    for (const [n, l] of Object.entries(activeChars)) {
+        let pBuff = 0; let tBuff = 0;
+        let condStr = "";
+        if (n === "민트" || n === "아들러") {
+            if (l >= 1) pBuff += 0.12; if (l >= 5) pBuff += 0.18;
+        }
+        if (n === "하니엘") {
+            if (l >= 1) pBuff += 0.12; if (l >= 3) pBuff += 0.12; if (l >= 5) pBuff += 0.18;
+        }
+        if (n === "나나리") {
+            if (l >= 1) pBuff += 0.2; if (l >= 5) pBuff += 0.3;
+            condStr = "<br><span style='font-size:11px; color:#888;'>(메인메뉴 개수에 따라 변동)</span>";
+        }
+        if (n === "스키아" || n === "치즈" || n === "백장" || n === "다포딜") {
+            if (l >= 1) tBuff += 18; if (l >= 5) tBuff += 27;
+        }
+        if (n === "에드가") {
+            if (l >= 1) tBuff += 18; if (l >= 3) tBuff += 18; if (l >= 5) tBuff += 27;
+        }
+        if (n === "우미츠키") {
+            if (l >= 1) pBuff += 0.12; if (l >= 3) tBuff += 24; 
+        }
+        if (n === "사키리") {
+            if (l >= 1) pBuff += 0.12; 
+            if (l >= 5) {
+                pBuff += 0.3;
+                condStr += "<br><span style='font-size:11px; color:#888;'>(동일 카테고리 3개 시 적용)</span>";
+            }
+        }
+
+        let statHtml = "";
+        if(pBuff > 0) statHtml += `단가 +${pBuff.toFixed(2)}${condStr}<br>`;
+        if(tBuff > 0) statHtml += `트래픽 +${tBuff}<br>`;
+
+        html += `
+            <div class="emp-stat-item">
+                <img src="./images/${n}.png" class="emp-stat-icon" alt="${n}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
+                <div class="emp-stat-content">
+                    <div class="emp-stat-name">${n} <span style="font-size:11px; color:#888;">(Lv.${l})</span></div>
+                    <div style="color:var(--text-main); line-height: 1.4;">${statHtml}</div>
+                </div>
+            </div>
+        `;
+    }
+    grid.innerHTML = html;
+    box.classList.add("show");
+}
+
 function saveData() {
     const data = {
         level: document.getElementById("userLevel").value,
         trend: document.getElementById("trendSelect").value,
         chars: activeChars,
-        history: charLvHistory
+        history: charLvHistory,
+        lvlUpTime: targetLevelUpDate ? targetLevelUpDate.getTime() : null
     };
     localStorage.setItem('cafeData', JSON.stringify(data));
 }
@@ -584,6 +749,7 @@ function loadData() {
             }
             if(data.trend && data.level >= 20) document.getElementById("trendSelect").value = data.trend;
             if(data.history) charLvHistory = data.history;
+            if(data.lvlUpTime) targetLevelUpDate = new Date(data.lvlUpTime);
             
             if(data.chars) {
                 activeChars = data.chars;
@@ -597,6 +763,61 @@ function loadData() {
             }
         } catch(e) {}
     }
+    renderEmpSummary();
+}
+
+function syncPonz() {
+    if (lastCalculatedPonz > 0) {
+        document.getElementById('calcPonz').value = lastCalculatedPonz.toFixed(2);
+    } else {
+        alert("먼저 최고 매출을 계산해 주시기 바랍니다.");
+    }
+}
+
+function calcLevelUpTime() {
+    const level = parseInt(document.getElementById("userLevel").value);
+    if (isNaN(level)) { 
+        alert("관리 레벨을 먼저 선택해 주시기 바랍니다."); 
+        return; 
+    }
+
+    const ponz = parseFloat(document.getElementById('calcPonz').value);
+    const pop = parseFloat(document.getElementById('calcPop').value) || 0;
+    const resBox = document.getElementById('levelUpResult');
+
+    if (isNaN(ponz) || ponz <= 0) {
+        resBox.innerHTML = "<span style='color:var(--trend-bg);'>시간당 폰즈를 올바르게 입력해주세요.</span>";
+        resBox.style.display = "block";
+        return;
+    }
+
+    const hourlyExp = ponz * (1 + pop);
+
+    if (level >= 40) {
+        resBox.innerHTML = `현재 최대 레벨(Lv.40)입니다.<br><span style='font-size:13px; color:var(--text-sub); font-weight:normal;'>더 이상 레벨업을 할 수 없습니다.</span><br>시간당 예상 획득 경험치(수익): <span style='color:var(--accent-blue); font-size:20px;'>${hourlyExp.toFixed(2)}</span>`;
+        resBox.style.display = "block";
+        targetLevelUpDate = null;
+        saveData();
+        return;
+    }
+
+    const expTotal = parseFloat(document.getElementById('calcExpTotal').value);
+    const expCur = parseFloat(document.getElementById('calcExpCur').value);
+    
+    if (isNaN(expTotal) || isNaN(expCur) || expTotal <= 0 || expCur < 0 || expTotal <= expCur) {
+        resBox.innerHTML = "<span style='color:var(--trend-bg);'>전체 경험치와 현재 경험치를 올바르게 입력해주세요. (전체 > 현재)</span>";
+        resBox.style.display = "block";
+        return;
+    }
+
+    const expLeft = expTotal - expCur;
+    const hoursRequired = expLeft / hourlyExp;
+    
+    targetLevelUpDate = new Date(Date.now() + hoursRequired * 3600 * 1000);
+    saveData();
+
+    resBox.innerHTML = `대시보드 상단 타이머에 적용되었습니다.<br><span style='font-size:13px; color:var(--text-sub); font-weight:normal; display:inline-block; margin-top:6px;'>(약 ${hoursRequired.toFixed(2)}시간 소요 / 시간당 ${hourlyExp.toFixed(2)} 획득)</span>`;
+    resBox.style.display = "block";
 }
 
 function getCombinations(arr, k) {
@@ -645,6 +866,9 @@ function runCalculator() {
 
     allCombos.forEach(combo => {
         let mainCount = combo.filter(item => item.category === "메인메뉴").length;
+        let drinkCount = combo.filter(item => item.category === "음료").length;
+        let dessertCount = combo.filter(item => item.category === "디저트").length;
+        
         let priceBuff = 0, trafficBuff = 0;
 
         for (const [n, l] of Object.entries(activeChars)) {
@@ -676,7 +900,7 @@ function runCalculator() {
             }
             if (n === "사키리") {
                 if (l >= 1) priceBuff += 0.12;
-                if (l >= 5) priceBuff += 0.3;
+                if (l >= 5 && (mainCount >= 3 || drinkCount >= 3 || dessertCount >= 3)) priceBuff += 0.3;
             }
         }
 
@@ -715,6 +939,7 @@ function runCalculator() {
     
     if(verifySum === absoluteBest.rev) {
         console.log("교차 검증 완료: 수익 무결성 확인됨");
+        lastCalculatedPonz = absoluteBest.rev; 
         renderData(absoluteBest.rev, absoluteBest);
     } else {
         err.innerText = "수익 계산 무결성 오류 발생. 페이지를 새로고침 해주세요.";
