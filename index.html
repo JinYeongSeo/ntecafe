@@ -11,6 +11,8 @@
 
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 
+    <script defer src="/_vercel/insights/script.js"></script>
+
     <title>가게 관리</title>
     <style>
         :root {
@@ -174,32 +176,12 @@
         }
         .char-card.active:hover .lv-overlay { display: flex; }
 
-        .lv-btn-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; width: 100%; }
         .lv-btn {
-            width: 100%; padding: 6px 0; background: #333; color: white; border: 1px solid #555;
+            width: 100%; padding: 4px 0; background: #333; color: white; border: 1px solid #555;
             border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold;
         }
         .lv-btn:hover { background: #555; }
         .lv-btn.active { background: var(--accent-blue); border-color: var(--accent-blue); }
-
-        .emp-summary-box {
-            background: var(--dashboard-bg); border-radius: 12px; padding: 16px; 
-            margin-top: 16px; display: none; border: 1px solid var(--border-color);
-        }
-        .emp-summary-box.show { display: block; animation: slideDown 0.2s ease-out; }
-        .emp-summary-title { font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-        .emp-summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
-        
-        .emp-stat-item {
-            background: var(--panel-bg); padding: 10px; border-radius: 8px; font-size: 13px; border: 1px solid var(--border-color);
-            display: flex; align-items: center; gap: 12px;
-        }
-        .emp-stat-icon {
-            width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
-            border: 2px solid var(--border-color); background: #ccc;
-        }
-        .emp-stat-content { flex: 1; }
-        .emp-stat-name { font-weight: 800; color: var(--accent-blue); margin-bottom: 4px; }
 
         #resultContainer { display: none; }
         
@@ -237,7 +219,6 @@
         }
         .item-img { max-width: 100%; max-height: 100%; object-fit: contain; }
         
-        /* 🌟 텍스트 오버플로우 ... 및 시인성 증가 🌟 */
         .item-name-bar {
             background: #2b2b36; height: 50px; display: flex; align-items: center; justify-content: center;
             border-bottom: 2px solid var(--yellow-text); padding: 0 10px;
@@ -338,7 +319,7 @@
     <h1>가게 관리</h1>
     <div class="header-btns">
         <button class="btn-info" onclick="openModal()">계산식 안내</button>
-        <button class="theme-toggle" onclick="toggleTheme()">다크 모드 전환</button>
+        <button id="themeToggleBtn" class="theme-toggle" onclick="toggleTheme()">다크 모드 전환</button>
     </div>
 </header>
 
@@ -379,14 +360,9 @@
         <div class="section-box">
             <div class="section-header">직원 배치</div>
             <div style="font-size: 13px; color: var(--text-sub); margin-bottom: 16px;">
-                * 해금된 카페 수에 따라 배치 인원이 제한됩니다. 한 번 클릭 시 기본 5렙으로 활성화되며, 빈 공간을 누르면 해제됩니다.
+                * 해금된 카페 수에 따라 배치 인원이 제한됩니다. 한 번 클릭 시 이전 설정 레벨로 활성화되며, 카드 내 빈 공간을 누르면 해제됩니다.
             </div>
             <div class="char-grid" id="charGrid"></div>
-            
-            <div class="emp-summary-box" id="empSummaryBox">
-                <div class="emp-summary-title">현재 적용된 직원 버프 상세</div>
-                <div class="emp-summary-grid" id="empSummaryGrid"></div>
-            </div>
         </div>
 
         <div class="section-box" id="resultContainer"></div>
@@ -437,12 +413,15 @@ const EMP_LIST = ["민트", "하니엘", "아들러", "나나리", "스키아", 
 
 function toggleTheme() {
     const body = document.documentElement;
+    const btn = document.getElementById('themeToggleBtn');
     if (body.getAttribute('data-theme') === 'dark') {
         body.removeAttribute('data-theme');
         localStorage.setItem('theme', 'light');
+        btn.innerText = '다크 모드 전환';
     } else {
         body.setAttribute('data-theme', 'dark');
         localStorage.setItem('theme', 'dark');
+        btn.innerText = '화이트 모드 전환';
     }
 }
 
@@ -484,10 +463,13 @@ function updateCountdown() {
 setInterval(updateCountdown, 1000);
 
 function initUI() {
+    const btn = document.getElementById('themeToggleBtn');
     if(localStorage.getItem('theme') === 'light') {
         document.documentElement.removeAttribute('data-theme');
+        btn.innerText = '다크 모드 전환';
     } else {
         document.documentElement.setAttribute('data-theme', 'dark');
+        btn.innerText = '화이트 모드 전환';
     }
 
     updateCountdown();
@@ -562,7 +544,6 @@ function toggleChar(emp) {
     }
     updateLvUI(emp);
     saveData();
-    renderEmpSummary();
 }
 
 function setLv(e, emp, lv) {
@@ -572,7 +553,6 @@ function setLv(e, emp, lv) {
     charLvHistory[emp] = lv; 
     updateLvUI(emp);
     saveData();
-    renderEmpSummary();
 }
 
 function updateLvUI(emp) {
@@ -581,60 +561,6 @@ function updateLvUI(emp) {
         if (activeChars[emp] === i) btn.classList.add('active');
         else btn.classList.remove('active');
     }
-}
-
-function renderEmpSummary() {
-    const box = document.getElementById("empSummaryBox");
-    const grid = document.getElementById("empSummaryGrid");
-    
-    if (Object.keys(activeChars).length === 0) {
-        box.classList.remove("show");
-        return;
-    }
-
-    let html = '';
-    for (const [n, l] of Object.entries(activeChars)) {
-        let pBuff = 0; let tBuff = 0;
-        let condStr = "";
-        if (n === "민트" || n === "아들러") {
-            if (l >= 1) pBuff += 0.12; if (l >= 5) pBuff += 0.18;
-        }
-        if (n === "하니엘") {
-            if (l >= 1) pBuff += 0.12; if (l >= 3) pBuff += 0.12; if (l >= 5) pBuff += 0.18;
-        }
-        if (n === "나나리") {
-            if (l >= 1) pBuff += 0.2; if (l >= 5) pBuff += 0.3;
-            condStr = "<br><span style='font-size:11px; color:#888;'>(메인메뉴 개수에 따라 변동)</span>";
-        }
-        if (n === "스키아" || n === "치즈" || n === "백장" || n === "다포딜") {
-            if (l >= 1) tBuff += 18; if (l >= 5) tBuff += 27;
-        }
-        if (n === "에드가") {
-            if (l >= 1) tBuff += 18; if (l >= 3) tBuff += 18; if (l >= 5) tBuff += 27;
-        }
-        if (n === "우미츠키") {
-            if (l >= 1) pBuff += 0.12; if (l >= 3) tBuff += 24; 
-        }
-        if (n === "사키리") {
-            if (l >= 1) pBuff += 0.12; if (l >= 5) pBuff += 0.3;
-        }
-
-        let statHtml = "";
-        if(pBuff > 0) statHtml += `단가 +${pBuff.toFixed(2)}${condStr}<br>`;
-        if(tBuff > 0) statHtml += `트래픽 +${tBuff}<br>`;
-
-        html += `
-            <div class="emp-stat-item">
-                <img src="./images/${n}.png" class="emp-stat-icon" alt="${n}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
-                <div class="emp-stat-content">
-                    <div class="emp-stat-name">${n} <span style="font-size:11px; color:#888;">(Lv.${l})</span></div>
-                    <div style="color:var(--text-main); line-height: 1.4;">${statHtml}</div>
-                </div>
-            </div>
-        `;
-    }
-    grid.innerHTML = html;
-    box.classList.add("show");
 }
 
 function saveData() {
@@ -671,7 +597,6 @@ function loadData() {
             }
         } catch(e) {}
     }
-    renderEmpSummary();
 }
 
 function getCombinations(arr, k) {
