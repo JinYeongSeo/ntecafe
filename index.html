@@ -427,13 +427,13 @@
                     <div style="display:flex; gap:8px;">
                         <select id="calcPopPreset" style="flex:1; padding:12px; font-size:13px; background:var(--dashboard-bg); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px; outline:none; cursor:pointer;" onchange="document.getElementById('calcPop').value = this.value; saveData();">
                             <option value="0">직접 입력 (0)</option>
-                            <option value="0.065">카페 1개 (0.065)</option>
-                            <option value="0.130">카페 2개 (0.130)</option>
-                            <option value="0.195">카페 3개 (0.195)</option>
-                            <option value="0.260">카페 4개 (0.260)</option>
-                            <option value="0.325">카페 5개 (0.325)</option>
+                            <option value="0.01">카페 1개 (0.01)</option>
+                            <option value="0.025">카페 2개 (0.025)</option>
+                            <option value="0.04">카페 3개 (0.04)</option>
+                            <option value="0.065">카페 4개 (0.065)</option>
+                            <option value="0.09">카페 5개 (0.09)</option>
                         </select>
-                        <input type="number" id="calcPop" class="calc-input" placeholder="0.225" step="0.001" style="flex:1;" oninput="saveData()">
+                        <input type="number" id="calcPop" class="calc-input" placeholder="0.09" step="0.001" style="flex:1;" oninput="saveData()">
                     </div>
                 </div>
                 <div>
@@ -602,7 +602,6 @@ function initUI() {
 
     loadData();
     
-    // 🌟 탭 간 동기화 이벤트 리스너
     window.addEventListener('storage', function(e) {
         if (e.key === 'cafeData') {
             EMP_LIST.forEach(emp => {
