@@ -178,15 +178,23 @@
         .cafe-title-wrap { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .cafe-title { font-weight: 800; font-size: 14px; color: var(--text-main); }
         .cafe-info { font-size: 10px; color: var(--text-sub); font-weight: 900; letter-spacing: 1px; }
-        .cafe-slots { display: flex; gap: 8px; }
+        
+        .cafe-slots { display: flex; gap: 8px; align-items: flex-start; }
         .cafe-slot {
-            flex: 1; aspect-ratio: 1; border-radius: 8px; background: var(--panel-bg);
+            flex: 1; border-radius: 8px; background: var(--panel-bg);
             border: 2px solid transparent; cursor: pointer; position: relative; overflow: hidden;
-            display: flex; justify-content: center; align-items: center; box-shadow: var(--card-shadow);
+            display: flex; flex-direction: column; box-shadow: var(--card-shadow);
         }
-        .cafe-slot.empty { border: 2px dashed var(--border-color); box-shadow: none; }
+        .cafe-slot.empty { 
+            aspect-ratio: 1; flex-direction: row; justify-content: center; align-items: center; 
+            border: 2px dashed var(--border-color); box-shadow: none; background: transparent; 
+        }
         .cafe-slot.empty::after { content: '+'; font-size: 32px; color: var(--border-color); font-weight: 300; }
-        .cafe-slot img { width: 100%; height: 100%; object-fit: cover; }
+
+        .slot-img-box {
+            width: 100%; aspect-ratio: 1; position: relative;
+        }
+        .slot-img-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
         
         .char-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; }
         .char-card {
@@ -209,16 +217,10 @@
         .lv-badge:active { background: var(--accent-blue); }
         
         .lv-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; padding: 10px;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
             z-index: 10;
         }
-
-        /* 데스크톱(마우스 지원) 환경에서는 배지 숨기고 Hover로 작동 */
-        @media (hover: hover) and (pointer: fine) {
-            .lv-badge { display: none; }
-            .cafe-slot:not(.empty):hover .lv-overlay { display: flex !important; }
-        }
+        .lv-title { font-size:12px; font-weight:bold; color:#fff; margin-bottom:8px; }
 
         .lv-btn-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; width: 100%; }
         .lv-btn {
@@ -227,6 +229,27 @@
         }
         .lv-btn:hover { background: #555; }
         .lv-btn.active { background: var(--accent-blue); border-color: var(--accent-blue); }
+
+        /* 데스크톱(마우스 지원) 환경 */
+        @media (hover: hover) and (pointer: fine) {
+            .lv-badge { display: none; }
+            .lv-overlay {
+                position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.85); padding: 10px;
+            }
+            .cafe-slot:not(.empty):hover .lv-overlay { display: flex !important; }
+        }
+
+        /* 모바일(터치 지원) 환경 */
+        @media (hover: none), (pointer: coarse) {
+            .lv-overlay {
+                position: relative; width: 100%; height: auto;
+                background: #1a1a24; padding: 8px 4px;
+            }
+            .lv-title { display: none; } /* 모바일에서는 높이 확보를 위해 타이틀 숨김 */
+            .lv-btn-grid { gap: 2px; }
+            .lv-btn { padding: 6px 0; font-size: 13px; border-color: #444; }
+        }
 
         .emp-summary-box {
             background: var(--dashboard-bg); border-radius: 12px; padding: 16px; 
@@ -365,7 +388,7 @@
             <button class="modal-close" onclick="closeModal()">&times;</button>
         </div>
         <div class="modal-body">
-            본 계산기는 다음의 공식을 바탕으로 최고 효율의 수익 산출합니다.
+            본 계산기는 다음의 공식을 바탕으로 최고 효율의 수익을 산출합니다.
             <ul>
                 <li><strong>상품 단가:</strong> 기본가 + 직원 버프 + 트렌드(적용 시 0.75)</li>
                 <li><strong>트래픽:</strong> 기본 트래픽(2400) + 직원 트래픽 버프</li>
@@ -710,14 +733,15 @@ function renderSlot(cafeIdx, slotIdx) {
     }
     const lv = charLvHistory[emp] || 5;
     return `
-    <div class="cafe-slot" onclick="handleSlotClick(${cafeIdx}, ${slotIdx}, event)">
-        <img src="./images/${emp}.png" alt="${emp}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
-        
-        <div class="lv-badge" onclick="toggleOverlay(event, ${cafeIdx}, ${slotIdx})">Lv.${lv} 설정 ▼</div>
+    <div class="cafe-slot">
+        <div class="slot-img-box" onclick="handleSlotClick(${cafeIdx}, ${slotIdx}, event)">
+            <img src="./images/${emp}.png" alt="${emp}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
+            <div class="lv-badge" onclick="toggleOverlay(event, ${cafeIdx}, ${slotIdx})">Lv.${lv} 설정 ▼</div>
+        </div>
         
         <div class="lv-overlay" id="overlay_${cafeIdx}_${slotIdx}" onclick="event.stopPropagation()">
-            <div style="font-size:12px; font-weight:bold; color:#fff; margin-bottom:8px;">레벨 설정</div>
-            <div class="lv-btn-grid" style="padding: 0 4px;">
+            <div class="lv-title">레벨 설정</div>
+            <div class="lv-btn-grid" style="padding: 0 2px;">
                 ${[1,2,3,4,5].map(v => `<button class="lv-btn ${lv === v ? 'active' : ''}" onclick="setLevel(event, '${emp}', ${v})">${v}</button>`).join('')}
             </div>
         </div>
@@ -726,11 +750,13 @@ function renderSlot(cafeIdx, slotIdx) {
 
 function toggleOverlay(event, cafeIdx, slotIdx) {
     event.stopPropagation();
-    // 다른 슬롯의 오버레이 닫기
+    const overlay = document.getElementById(`overlay_${cafeIdx}_${slotIdx}`);
+    const isShowing = overlay.style.display === 'flex';
+    
+    // 열려있는 다른 오버레이 전부 닫기
     document.querySelectorAll('.lv-overlay').forEach(el => el.style.display = 'none');
     
-    const overlay = document.getElementById(`overlay_${cafeIdx}_${slotIdx}`);
-    if (overlay) {
+    if (!isShowing) {
         overlay.style.display = 'flex';
     }
 }
@@ -743,7 +769,7 @@ function handleSlotClick(cafeIdx, slotIdx, event) {
     }
 
     if (cafeDataState[cafeIdx][slotIdx]) {
-        // 이미지가 있는 곳(카드 내 빈 공간)을 터치 시 직원 해제
+        // 이미지가 있는 영역을 터치 시 직원 해제
         cafeDataState[cafeIdx][slotIdx] = null;
         saveData();
         renderCafes();
