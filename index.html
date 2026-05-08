@@ -207,7 +207,6 @@
         .char-info { padding: 10px; text-align: center; }
         .char-name { font-weight: 700; font-size: 13px; color: var(--text-main); }
 
-        /* 레벨 관련 반응형 UI (마우스 vs 터치 분기) */
         .lv-badge {
             position: absolute; bottom: 0; left: 0; width: 100%;
             background: rgba(0,0,0,0.65); color: #fff; padding: 6px 0;
@@ -230,7 +229,6 @@
         .lv-btn:hover { background: #555; }
         .lv-btn.active { background: var(--accent-blue); border-color: var(--accent-blue); }
 
-        /* 데스크톱(마우스 지원) 환경 */
         @media (hover: hover) and (pointer: fine) {
             .lv-badge { display: none; }
             .lv-overlay {
@@ -240,7 +238,6 @@
             .cafe-slot:not(.empty):hover .lv-overlay { display: flex !important; }
         }
 
-        /* 모바일(터치 지원) 환경 */
         @media (hover: none), (pointer: coarse) {
             .lv-badge { padding: 10px 0; font-size: 13px; }
             .lv-overlay {
@@ -374,9 +371,7 @@
             .main-layout { grid-template-columns: 1fr; }
             header { flex-direction: column; gap: 15px; text-align: center; padding: 15px; }
             .item-grid { grid-template-columns: repeat(2, 1fr); }
-            
             .cafe-grid { grid-template-columns: 1fr; } 
-            
             body { padding: 10px; }
             .timer-wrap { flex-direction: column; }
         }
@@ -393,7 +388,7 @@
         <div class="modal-body">
             본 계산기는 다음의 공식을 바탕으로 최고 효율의 수익을 산출합니다.
             <ul>
-                <li><strong>상품 단가:</strong> 기본가 + 직원 버프 + 트렌드(적용 시 0.75)</li>
+                <li><strong>상품 단가:</strong> 기본가 + 직원 버프 + 트렌드 보너스</li>
                 <li><strong>트래픽:</strong> 기본 트래픽(2400) + 직원 트래픽 버프</li>
                 <li><strong>시간당 메뉴 수익:</strong> 상품 단가 × (트래픽 / 100)</li>
             </ul>
@@ -402,7 +397,8 @@
             </div>
             <p style="margin-top:15px; font-size: 12px; color: var(--text-sub);">
                 ※ 우미츠키의 트래픽 1% 증가는 다른 직원의 트래픽 버프 합산 후 마지막에 곱연산(x1.01)으로 적용됩니다.<br>
-                ※ 사키리의 5레벨 추가 단가 버프는 '동일 카테고리 상품이 3개 이상'일 때 발동됩니다.
+                ※ 사키리의 5레벨 추가 단가 버프는 '동일 카테고리 상품이 3개 이상'일 때 발동됩니다.<br>
+                ※ 카테고리 트렌드(메인메뉴/음료/디저트) 적용 시 단가가 +1.00 증가합니다.
             </p>
         </div>
     </div>
@@ -442,7 +438,7 @@
         <div class="dash-card">
             <div class="bg-text">TREND SYSTEM</div>
             <div class="dash-content">
-                <span class="input-label">오늘의 트렌드 (+0.75)</span>
+                <span class="input-label">오늘의 트렌드</span>
                 <select id="trendSelect" disabled onchange="saveData()">
                     <option value="">트렌드 없음 (Lv.20 이상 해금)</option>
                 </select>
@@ -528,19 +524,10 @@
     </div>
 </div>
 
-<footer>
-    UI & Base Logic Modified by <a href="https://arca.live/u/@%EC%98%A4%EA%B3%A1%EA%B3%A1" target="_blank">오고곡</a> <br>
-    Data Reference: <a href="https://bbs.nga.cn/read.php?tid=46697373&rand=74" target="_blank">NGA (Original Math)</a> | 
-    <a href="https://arca.live/b/nevernesstoeverness/169873800" target="_blank">arca.live</a> <br>
-    <a href="mailto:pridecha5@gmail.com">문의하기</a>
-</footer>
-
 <script>
 const CAFE_NAMES = ["(푸른 수염길점)", "(바로크 거리점)", "(스위트 피어 거리점)", "(무민 거리점)", "(반각 거리점)"];
 
-let cafeDataState = [
-    [null, null], [null, null], [null, null], [null, null], [null, null]
-];
+let cafeDataState = [[null, null], [null, null], [null, null], [null, null], [null, null]];
 let charLvHistory = {}; 
 let lastCalculatedPonz = 0; 
 let targetLevelUpDate = null; 
@@ -569,6 +556,7 @@ const RAW_ITEMS = [
 
 const FRUITS = ["코코넛", "사과", "토마토", "오렌지", "딸기"];
 const TREND_LIST = [
+    "메인 메뉴 (+1.00)", "음료 (+1.00)", "디저트 (+1.00)",
     "과일 (코코넛/사과/토마토/오렌지/딸기)", "「9℃」 커피 원두", "「T&J」 치즈 덩이", "「베이킹 파트너」 말차 가루", 
     "「베이킹 파트너」 코코아 가루", "「베이킹 파트너」 휘핑크림", "「설탕 또는 소금」 바다 소금", "「설탕 또는 소금」 백설탕", 
     "날달걀", "단단한 버터", "딸기", "밀가루", "별사탕", "사과", "상추", "신선한 돼지고기", "신선한 소고기", 
@@ -577,7 +565,6 @@ const TREND_LIST = [
 
 const EMP_LIST = ["민트", "하니엘", "아들러", "나나리", "스키아", "에드가", "우미츠키", "사키리", "치즈", "백장", "다포딜"];
 
-// 다른 영역 터치 시 열려있는 레벨 오버레이 일괄 닫기
 document.addEventListener('click', function(e) {
     if (!e.target.closest('.lv-overlay') && !e.target.closest('.lv-badge')) {
         document.querySelectorAll('.lv-overlay').forEach(el => el.style.display = 'none');
@@ -607,49 +594,36 @@ function closeModal(e) {
 
 function toggleItemDetail(idx) {
     const detailEl = document.getElementById(`detail_${idx}`);
-    if(detailEl.classList.contains('show')) {
-        detailEl.classList.remove('show');
-    } else {
-        detailEl.classList.add('show');
-    }
+    detailEl.classList.toggle('show');
 }
 
 function updateCountdown() {
     const now = new Date();
     const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
     const kstNow = new Date(utc + (3600000 * 9));
-
     const nextReset = new Date(kstNow);
     nextReset.setHours(12, 0, 0, 0);
     if (kstNow.getHours() >= 12) nextReset.setDate(nextReset.getDate() + 1);
-
     const diff = nextReset - kstNow;
-    const h = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
-    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-    const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
+    const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
     document.getElementById('resetTimer').innerText = `${h}:${m}:${s}`;
 
     const lvlTimerEl = document.getElementById('levelUpTimer');
     if (targetLevelUpDate) {
-        const nowMs = Date.now();
-        const targetMs = targetLevelUpDate.getTime();
-        if (nowMs >= targetMs) {
+        const diffMs = targetLevelUpDate - Date.now();
+        if (diffMs <= 0) {
             lvlTimerEl.innerText = "LEVEL UP!";
             lvlTimerEl.style.color = "var(--yellow-text)";
         } else {
-            const lDiff = targetMs - nowMs;
-            const lD = Math.floor(lDiff / (1000 * 60 * 60 * 24));
-            const lH = Math.floor((lDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
-            const lM = Math.floor((lDiff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-            const lS = Math.floor((lDiff % (1000 * 60)) / 1000).toString().padStart(2, '0');
-            
-            if(lD > 0) lvlTimerEl.innerText = `${lD}일 ${lH}:${lM}:${lS}`;
-            else lvlTimerEl.innerText = `${lH}:${lM}:${lS}`;
+            const lD = Math.floor(diffMs / 86400000);
+            const lH = Math.floor((diffMs % 86400000) / 3600000).toString().padStart(2, '0');
+            const lM = Math.floor((diffMs % 3600000) / 60000).toString().padStart(2, '0');
+            const lS = Math.floor((diffMs % 60000) / 1000).toString().padStart(2, '0');
+            lvlTimerEl.innerText = lD > 0 ? `${lD}일 ${lH}:${lM}:${lS}` : `${lH}:${lM}:${lS}`;
             lvlTimerEl.style.color = "#fff";
         }
-    } else {
-        lvlTimerEl.innerText = "--:--:--";
-        lvlTimerEl.style.color = "#888";
     }
 }
 setInterval(updateCountdown, 1000);
@@ -663,24 +637,13 @@ function initUI() {
         document.documentElement.setAttribute('data-theme', 'dark');
         btn.innerText = '화이트 모드 전환';
     }
-
     updateCountdown();
-
     const lvSelect = document.getElementById("userLevel");
     for (let i = 1; i <= 40; i++) lvSelect.add(new Option(`Lv. ${i}`, i));
-
     const trSelect = document.getElementById("trendSelect");
     TREND_LIST.forEach(t => trSelect.add(new Option(t, t)));
-
     loadData();
     renderCafes();
-    
-    window.addEventListener('storage', function(e) {
-        if (e.key === 'cafeData') {
-            loadData();
-            renderCafes();
-        }
-    });
 }
 
 function handleLevelChange(lv, skipSave = false) {
@@ -711,7 +674,6 @@ function renderCafes() {
     const unlocked = getUnlockedSlots(level);
     const grid = document.getElementById("cafeGrid");
     let html = '';
-
     for (let i = 0; i < 5; i++) {
         const isLocked = i >= unlocked;
         html += `
@@ -731,9 +693,7 @@ function renderCafes() {
 
 function renderSlot(cafeIdx, slotIdx) {
     const emp = cafeDataState[cafeIdx][slotIdx];
-    if (!emp) {
-        return `<div class="cafe-slot empty" onclick="handleSlotClick(${cafeIdx}, ${slotIdx}, event)"></div>`;
-    }
+    if (!emp) return `<div class="cafe-slot empty" onclick="handleSlotClick(${cafeIdx}, ${slotIdx}, event)"></div>`;
     const lv = charLvHistory[emp] || 5;
     return `
     <div class="cafe-slot" onclick="handleSlotClick(${cafeIdx}, ${slotIdx}, event)">
@@ -741,7 +701,6 @@ function renderSlot(cafeIdx, slotIdx) {
             <img src="./images/${emp}.png" alt="${emp}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
             <div class="lv-badge" onclick="toggleOverlay(event, ${cafeIdx}, ${slotIdx})">Lv.${lv} 설정 ▼</div>
         </div>
-        
         <div class="lv-overlay" id="overlay_${cafeIdx}_${slotIdx}" onclick="handleOverlayClick(event, ${cafeIdx}, ${slotIdx})">
             <div class="lv-title">레벨 설정</div>
             <div class="lv-btn-grid">
@@ -753,14 +712,9 @@ function renderSlot(cafeIdx, slotIdx) {
 
 function handleOverlayClick(event, cafeIdx, slotIdx) {
     event.stopPropagation();
-    
-    const isTouch = window.matchMedia("(hover: none), (pointer: coarse)").matches;
-    
-    if (isTouch) {
-        // 모바일: 오버레이 배경 터치 시 창 닫기
+    if (window.matchMedia("(hover: none), (pointer: coarse)").matches) {
         document.getElementById(`overlay_${cafeIdx}_${slotIdx}`).style.display = 'none';
     } else {
-        // PC: 오버레이 배경 클릭 시 캐릭터 해제 (기존 슬롯 클릭과 동일하게 동작)
         handleSlotClick(cafeIdx, slotIdx, event);
     }
 }
@@ -769,28 +723,16 @@ function toggleOverlay(event, cafeIdx, slotIdx) {
     event.stopPropagation();
     const overlay = document.getElementById(`overlay_${cafeIdx}_${slotIdx}`);
     const isShowing = overlay.style.display === 'flex';
-    
-    // 열려있는 다른 오버레이 전부 닫기
     document.querySelectorAll('.lv-overlay').forEach(el => el.style.display = 'none');
-    
-    if (!isShowing) {
-        overlay.style.display = 'flex';
-    }
+    if (!isShowing) overlay.style.display = 'flex';
 }
 
 function handleSlotClick(cafeIdx, slotIdx, event) {
     const level = parseInt(document.getElementById("userLevel").value);
-    if (isNaN(level)) { 
-        alert("관리 레벨을 먼저 선택해 주시기 바랍니다."); 
-        return; 
-    }
-
+    if (isNaN(level)) { alert("관리 레벨을 먼저 선택해 주시기 바랍니다."); return; }
     if (cafeDataState[cafeIdx][slotIdx]) {
-        // 이미지가 있는 영역을 터치 시 직원 해제
         cafeDataState[cafeIdx][slotIdx] = null;
-        saveData();
-        renderCafes();
-        renderEmpSummary();
+        saveData(); renderCafes(); renderEmpSummary();
     } else {
         selectingSlot = { cafeIdx, slotIdx };
         renderCharModal();
@@ -802,7 +744,6 @@ function renderCharModal() {
     const grid = document.getElementById("modalCharGrid");
     const placedChars = cafeDataState.flat().filter(Boolean);
     let html = '';
-
     EMP_LIST.forEach(emp => {
         if(placedChars.includes(emp)) return;
         html += `
@@ -811,19 +752,14 @@ function renderCharModal() {
             <div class="char-info"><div class="char-name">${emp}</div></div>
         </div>`;
     });
-    
-    if (html === '') html = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: var(--text-sub);">배치할 직원이 없습니다.</div>';
-    grid.innerHTML = html;
+    grid.innerHTML = html || '<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: var(--text-sub);">배치할 직원이 없습니다.</div>';
 }
 
 function selectCharForSlot(emp) {
     if(selectingSlot) {
         cafeDataState[selectingSlot.cafeIdx][selectingSlot.slotIdx] = emp;
         if(!charLvHistory[emp]) charLvHistory[emp] = 5;
-        saveData();
-        renderCafes();
-        renderEmpSummary();
-        closeCharModal();
+        saveData(); renderCafes(); renderEmpSummary(); closeCharModal();
     }
 }
 
@@ -836,10 +772,8 @@ function closeCharModal(e) {
 
 function setLevel(e, emp, lv) {
     e.stopPropagation();
-    charLvHistory[emp] = lv; 
-    saveData();
-    renderCafes();
-    renderEmpSummary();
+    charLvHistory[emp] = lv;
+    saveData(); renderCafes(); renderEmpSummary();
 }
 
 function getActiveCharsMap() {
@@ -847,9 +781,7 @@ function getActiveCharsMap() {
     const unlocked = getUnlockedSlots(level);
     const active = {};
     for(let i = 0; i < unlocked; i++) {
-        cafeDataState[i].forEach(emp => {
-            if(emp) active[emp] = charLvHistory[emp] || 5;
-        });
+        cafeDataState[i].forEach(emp => { if(emp) active[emp] = charLvHistory[emp] || 5; });
     }
     return active;
 }
@@ -858,62 +790,24 @@ function renderEmpSummary() {
     const box = document.getElementById("empSummaryBox");
     const grid = document.getElementById("empSummaryGrid");
     const activeMap = getActiveCharsMap();
-    
-    if (Object.keys(activeMap).length === 0) {
-        box.classList.remove("show");
-        return;
-    }
-
+    if (Object.keys(activeMap).length === 0) { box.classList.remove("show"); return; }
     let html = '';
     for (const [n, l] of Object.entries(activeMap)) {
-        let pBuff = 0; let tBuff = 0;
-        let condStr = "";
-        let isUmiTraffic = false;
-        
-        if (n === "민트" || n === "아들러") {
-            if (l >= 1) pBuff += 0.12; if (l >= 5) pBuff += 0.18;
-        }
-        if (n === "하니엘") {
-            if (l >= 1) pBuff += 0.12; if (l >= 3) pBuff += 0.12; if (l >= 5) pBuff += 0.18;
-        }
-        if (n === "나나리") {
-            if (l >= 1) pBuff += 0.2; if (l >= 5) pBuff += 0.3;
-            condStr = "<br><span style='font-size:11px; color:#888;'>(메인메뉴 개수에 따라 변동)</span>";
-        }
-        if (n === "스키아" || n === "치즈" || n === "백장" || n === "다포딜") {
-            if (l >= 1) tBuff += 18; if (l >= 5) tBuff += 27;
-        }
-        if (n === "에드가") {
-            if (l >= 1) tBuff += 18; if (l >= 3) tBuff += 18; if (l >= 5) tBuff += 27;
-        }
-        if (n === "우미츠키") {
-            if (l >= 1) pBuff += 0.12; if (l >= 3) isUmiTraffic = true; 
-        }
-        if (n === "사키리") {
-            if (l >= 1) pBuff += 0.12; 
-            if (l >= 5) {
-                pBuff += 0.3;
-                condStr += "<br><span style='font-size:11px; color:#888;'>(동일 카테고리 3개 시 적용)</span>";
-            }
-        }
-
+        let pBuff = 0, tBuff = 0, isUmiTraffic = false, condStr = "";
+        if (n === "민트" || n === "아들러") { if (l >= 1) pBuff += 0.12; if (l >= 5) pBuff += 0.18; }
+        if (n === "하니엘") { if (l >= 1) pBuff += 0.12; if (l >= 3) pBuff += 0.12; if (l >= 5) pBuff += 0.18; }
+        if (n === "나나리") { if (l >= 1) pBuff += 0.2; if (l >= 5) pBuff += 0.3; condStr = "<br><span style='font-size:11px; color:#888;'>(메인메뉴 개수에 따라 변동)</span>"; }
+        if (n === "스키아" || n === "치즈" || n === "백장" || n === "다포딜") { if (l >= 1) tBuff += 18; if (l >= 5) tBuff += 27; }
+        if (n === "에드가") { if (l >= 1) tBuff += 18; if (l >= 3) tBuff += 18; if (l >= 5) tBuff += 27; }
+        if (n === "우미츠키") { if (l >= 1) pBuff += 0.12; if (l >= 3) isUmiTraffic = true; }
+        if (n === "사키리") { if (l >= 1) pBuff += 0.12; if (l >= 5) { pBuff += 0.3; condStr += "<br><span style='font-size:11px; color:#888;'>(동일 카테고리 3개 시 적용)</span>"; } }
         let statHtml = "";
         if(pBuff > 0) statHtml += `단가 +${pBuff.toFixed(2)}${condStr}<br>`;
         if(tBuff > 0) statHtml += `트래픽 +${tBuff}<br>`;
         if(isUmiTraffic) statHtml += `트래픽 +1% <span style='font-size:11px; color:#888;'>(합산 후 적용)</span><br>`;
-
-        html += `
-            <div class="emp-stat-item">
-                <img src="./images/${n}.png" class="emp-stat-icon" alt="${n}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
-                <div class="emp-stat-content">
-                    <div class="emp-stat-name">${n} <span style="font-size:11px; color:#888;">(Lv.${l})</span></div>
-                    <div style="color:var(--text-main); line-height: 1.4;">${statHtml}</div>
-                </div>
-            </div>
-        `;
+        html += `<div class="emp-stat-item"><img src="./images/${n}.png" class="emp-stat-icon" alt="${n}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='"><div class="emp-stat-content"><div class="emp-stat-name">${n} <span style="font-size:11px; color:#888;">(Lv.${l})</span></div><div style="color:var(--text-main); line-height: 1.4;">${statHtml}</div></div></div>`;
     }
-    grid.innerHTML = html;
-    box.classList.add("show");
+    grid.innerHTML = html; box.classList.add("show");
 }
 
 function saveData() {
@@ -937,87 +831,42 @@ function loadData() {
     if(saved) {
         try {
             const data = JSON.parse(saved);
-            if(data.level) {
-                document.getElementById("userLevel").value = data.level;
-                handleLevelChange(data.level, true);
-            }
+            if(data.level) { document.getElementById("userLevel").value = data.level; handleLevelChange(data.level, true); }
             if(data.trend && data.level >= 20) document.getElementById("trendSelect").value = data.trend;
             if(data.history) charLvHistory = data.history;
             if(data.lvlUpTime) targetLevelUpDate = new Date(data.lvlUpTime);
-
             if(data.calcExpTotal) document.getElementById('calcExpTotal').value = data.calcExpTotal;
             if(data.calcExpCur) document.getElementById('calcExpCur').value = data.calcExpCur;
             if(data.calcPop) document.getElementById('calcPop').value = data.calcPop;
             if(data.calcPopPreset) document.getElementById('calcPopPreset').value = data.calcPopPreset;
             if(data.calcPonz) document.getElementById('calcPonz').value = data.calcPonz;
-            
-            if(data.cafeState) {
-                cafeDataState = data.cafeState;
-            } else if (data.chars) {
-                const activeList = Object.keys(data.chars);
-                let ptr = 0;
-                for(let i=0; i<5; i++) {
-                    if(ptr < activeList.length) cafeDataState[i][0] = activeList[ptr++];
-                    if(ptr < activeList.length) cafeDataState[i][1] = activeList[ptr++];
-                }
-            }
+            if(data.cafeState) cafeDataState = data.cafeState;
         } catch(e) {}
     }
     renderEmpSummary();
 }
 
 function syncPonz() {
-    if (lastCalculatedPonz > 0) {
-        document.getElementById('calcPonz').value = lastCalculatedPonz.toFixed(2);
-        saveData();
-    } else {
-        alert("먼저 최고 매출을 계산해 주시기 바랍니다.");
-    }
+    if (lastCalculatedPonz > 0) { document.getElementById('calcPonz').value = lastCalculatedPonz.toFixed(2); saveData(); }
+    else alert("먼저 최고 매출을 계산해 주시기 바랍니다.");
 }
 
 function calcLevelUpTime() {
     const level = parseInt(document.getElementById("userLevel").value);
-    if (isNaN(level)) { 
-        alert("관리 레벨을 먼저 선택해 주시기 바랍니다."); 
-        return; 
-    }
-
+    if (isNaN(level)) { alert("관리 레벨을 먼저 선택해 주시기 바랍니다."); return; }
     const ponz = parseFloat(document.getElementById('calcPonz').value);
     const pop = parseFloat(document.getElementById('calcPop').value) || 0;
     const resBox = document.getElementById('levelUpResult');
-
-    if (isNaN(ponz) || ponz <= 0) {
-        resBox.innerHTML = "<span style='color:var(--trend-bg);'>시간당 폰즈를 올바르게 입력해주세요.</span>";
-        resBox.style.display = "block";
-        return;
-    }
-
+    if (isNaN(ponz) || ponz <= 0) { resBox.innerHTML = "<span style='color:var(--trend-bg);'>시간당 폰즈를 올바르게 입력해주세요.</span>"; resBox.style.display = "block"; return; }
     const hourlyExp = ponz * (1 + pop);
-
-    if (level >= 40) {
-        resBox.innerHTML = `현재 최대 레벨(Lv.40)입니다.<br><span style='font-size:13px; color:var(--text-sub); font-weight:normal;'>더 이상 레벨업을 할 수 없습니다.</span><br>시간당 예상 획득 경험치(수익): <span style='color:var(--accent-blue); font-size:20px;'>${hourlyExp.toFixed(2)}</span>`;
-        resBox.style.display = "block";
-        targetLevelUpDate = null;
-        saveData();
-        return;
-    }
-
+    if (level >= 40) { resBox.innerHTML = `현재 최대 레벨(Lv.40)입니다.<br>시간당 예상 획득 경험치(수익): <span style='color:var(--accent-blue); font-size:20px;'>${hourlyExp.toFixed(2)}</span>`; resBox.style.display = "block"; return; }
     const expTotal = parseFloat(document.getElementById('calcExpTotal').value);
     const expCur = parseFloat(document.getElementById('calcExpCur').value);
-    
-    if (isNaN(expTotal) || isNaN(expCur) || expTotal <= 0 || expCur < 0 || expTotal <= expCur) {
-        resBox.innerHTML = "<span style='color:var(--trend-bg);'>전체 경험치와 현재 경험치를 올바르게 입력해주세요. (전체 > 현재)</span>";
-        resBox.style.display = "block";
-        return;
-    }
-
-    const expLeft = expTotal - expCur;
-    const hoursRequired = expLeft / hourlyExp;
-    
-    targetLevelUpDate = new Date(Date.now() + hoursRequired * 3600 * 1000);
+    if (isNaN(expTotal) || isNaN(expCur) || expTotal <= expCur) { resBox.innerHTML = "<span style='color:var(--trend-bg);'>경험치를 올바르게 입력해주세요. (전체 > 현재)</span>"; resBox.style.display = "block"; return; }
+    const hoursRequired = (expTotal - expCur) / hourlyExp;
+    targetLevelUpDate = new Date(Date.now() + hoursRequired * 3600000);
     saveData();
-
-    resBox.innerHTML = `대시보드 상단 타이머에 적용되었습니다.<br><span style='font-size:13px; color:var(--text-sub); font-weight:normal; display:inline-block; margin-top:6px;'>(약 ${hoursRequired.toFixed(2)}시간 소요 / 시간당 ${hourlyExp.toFixed(2)} 획득)</span>`;
+    resBox.innerHTML = `대시보드 타이머에 적용되었습니다.<br>(약 ${hoursRequired.toFixed(2)}시간 소요 / 시간당 ${hourlyExp.toFixed(2)} 획득)`;
     resBox.style.display = "block";
 }
 
@@ -1037,31 +886,14 @@ function runCalculator() {
     const err = document.getElementById("errorMsg");
     const resWrap = document.getElementById("resultContainer");
     err.style.display = "none"; resWrap.style.display = "none";
-
     const level = parseInt(document.getElementById("userLevel").value);
-    if (isNaN(level)) { 
-        alert("관리 레벨을 먼저 선택해 주시기 바랍니다."); 
-        return; 
-    }
-
+    if (isNaN(level)) { alert("관리 레벨을 먼저 선택해 주시기 바랍니다."); return; }
     const slots = getUnlockedSlots(level);
     const trend = document.getElementById("trendSelect").value;
-
-    const availableItems = RAW_ITEMS.filter(it => level >= it[4]).map(it => {
-        return {
-            name: it[1], category: it[2],
-            basePrice: (level >= it[6]) ? it[5] : it[3],
-            priceUpLevel: it[6], 
-            ingredients: [it[7], it[8], it[9], it[10], it[11]].filter(Boolean)
-        };
-    });
-
-    if (availableItems.length < slots) {
-        err.innerText = `해금된 메뉴가 부족합니다. (필요 메뉴: ${slots}종)`; 
-        err.style.display = "block";
-        return;
-    }
-
+    const availableItems = RAW_ITEMS.filter(it => level >= it[4]).map(it => ({
+        name: it[1], category: it[2], basePrice: (level >= it[6]) ? it[5] : it[3], priceUpLevel: it[6], ingredients: [it[7], it[8], it[9], it[10], it[11]].filter(Boolean)
+    }));
+    if (availableItems.length < slots) { err.innerText = `해금된 메뉴가 부족합니다. (필요 메뉴: ${slots}종)`; err.style.display = "block"; return; }
     const allCombos = getCombinations(availableItems, slots);
     let comboList = []; 
     const currentActiveMap = getActiveCharsMap();
@@ -1070,157 +902,62 @@ function runCalculator() {
         let mainCount = combo.filter(item => item.category === "메인메뉴").length;
         let drinkCount = combo.filter(item => item.category === "음료").length;
         let dessertCount = combo.filter(item => item.category === "디저트").length;
-        
-        let globalPriceBuff = 0, globalTrafficBuff = 0;
-        let umiMult = 1;
+        let globalPriceBuff = 0, globalTrafficBuff = 0, umiMult = 1;
 
         for (const [n, l] of Object.entries(currentActiveMap)) {
-            if (n === "민트" || n === "아들러") {
-                if (l >= 1) globalPriceBuff += 0.12;
-                if (l >= 5) globalPriceBuff += 0.18;
-            }
-            if (n === "하니엘") {
-                if (l >= 1) globalPriceBuff += 0.12;
-                if (l >= 3) globalPriceBuff += 0.12;
-                if (l >= 5) globalPriceBuff += 0.18;
-            }
-            if (n === "나나리") {
-                if (l >= 1 && mainCount >= 1) globalPriceBuff += 0.2;
-                if (l >= 5 && mainCount >= 2) globalPriceBuff += 0.3;
-            }
-            if (n === "스키아" || n === "치즈" || n === "백장" || n === "다포딜") {
-                if (l >= 1) globalTrafficBuff += 18;
-                if (l >= 5) globalTrafficBuff += 27;
-            }
-            if (n === "에드가") {
-                if (l >= 1) globalTrafficBuff += 18;
-                if (l >= 3) globalTrafficBuff += 18;
-                if (l >= 5) globalTrafficBuff += 27;
-            }
-            if (n === "우미츠키") {
-                if (l >= 1) globalPriceBuff += 0.12;
-                if (l >= 3) umiMult = 1.01; 
-            }
-            if (n === "사키리") {
-                if (l >= 1) globalPriceBuff += 0.12;
-                if (l >= 5 && (mainCount >= 3 || drinkCount >= 3 || dessertCount >= 3)) globalPriceBuff += 0.3;
-            }
+            if (n === "민트" || n === "아들러") { if (l >= 1) globalPriceBuff += 0.12; if (l >= 5) globalPriceBuff += 0.18; }
+            if (n === "하니엘") { if (l >= 1) globalPriceBuff += 0.12; if (l >= 3) globalPriceBuff += 0.12; if (l >= 5) globalPriceBuff += 0.18; }
+            if (n === "나나리") { if (l >= 1 && mainCount >= 1) globalPriceBuff += 0.2; if (l >= 5 && mainCount >= 2) globalPriceBuff += 0.3; }
+            if (n === "스키아" || n === "치즈" || n === "백장" || n === "다포딜") { if (l >= 1) globalTrafficBuff += 18; if (l >= 5) globalTrafficBuff += 27; }
+            if (n === "에드가") { if (l >= 1) globalTrafficBuff += 18; if (l >= 3) globalTrafficBuff += 18; if (l >= 5) globalTrafficBuff += 27; }
+            if (n === "우미츠키") { if (l >= 1) globalPriceBuff += 0.12; if (l >= 3) umiMult = 1.01; }
+            if (n === "사키리") { if (l >= 1) globalPriceBuff += 0.12; if (l >= 5 && (mainCount >= 3 || drinkCount >= 3 || dessertCount >= 3)) globalPriceBuff += 0.3; }
         }
 
-        let comboRev = 0;
-        const details = [];
-
+        let comboRev = 0; const details = [];
         combo.forEach((item, cafeIdx) => {
-            let localPriceBuff = globalPriceBuff; 
-            let localTrafficBuff = globalTrafficBuff;
-
             let isTrend = false;
+            let trendBonus = 0;
+            
+            // 트렌드 로직 분기 처리
             if (trend) {
-                isTrend = trend.startsWith("과일") ? 
-                    item.ingredients.some(ing => FRUITS.includes(ing)) : 
-                    item.ingredients.includes(trend);
+                if (trend.startsWith("메인 메뉴")) {
+                    if (item.category === "메인메뉴") { isTrend = true; trendBonus = 1.0; }
+                } else if (trend.startsWith("음료")) {
+                    if (item.category === "음료") { isTrend = true; trendBonus = 1.0; }
+                } else if (trend.startsWith("디저트")) {
+                    if (item.category === "디저트") { isTrend = true; trendBonus = 1.0; }
+                } else {
+                    isTrend = trend.startsWith("과일") ? item.ingredients.some(ing => FRUITS.includes(ing)) : item.ingredients.includes(trend);
+                    if (isTrend) trendBonus = 0.75;
+                }
             }
             
-            const trendBonus = isTrend ? 0.75 : 0;
-            const finalPrice = item.basePrice + localPriceBuff + trendBonus;
-            
-            // 모든 트래픽 버프 합산 후 마지막에 우미츠키 배율 곱셈 처리
-            const totalTraffic = (2400 + localTrafficBuff) * umiMult;
+            const finalPrice = item.basePrice + globalPriceBuff + trendBonus;
+            const totalTraffic = (2400 + globalTrafficBuff) * umiMult;
             const hourlyRev = finalPrice * (totalTraffic / 100);
-            
             comboRev += hourlyRev;
             details.push({
-                cafeName: CAFE_NAMES[cafeIdx],
-                name: item.name, category: item.category, base: item.basePrice, final: finalPrice, isTrend, rev: hourlyRev, priceUpLevel: item.priceUpLevel,
-                appliedPriceBuff: localPriceBuff
+                cafeName: CAFE_NAMES[cafeIdx], name: item.name, category: item.category, base: item.basePrice, final: finalPrice, isTrend, trendBonus, rev: hourlyRev, priceUpLevel: item.priceUpLevel, appliedPriceBuff: globalPriceBuff
             });
         });
-
-        const finalRev = Math.round((comboRev + Number.EPSILON) * 100) / 100;
-        comboList.push({ rev: finalRev, details, globalPriceBuff, totalTraffic: (2400 + globalTrafficBuff) * umiMult });
+        comboList.push({ rev: Math.round((comboRev + Number.EPSILON) * 100) / 100, details, globalPriceBuff, totalTraffic: (2400 + globalTrafficBuff) * umiMult });
     });
 
     comboList.sort((a, b) => b.rev - a.rev);
     const absoluteBest = comboList[0];
-    
-    let verifySum = 0;
-    absoluteBest.details.forEach(d => verifySum += d.rev);
-    verifySum = Math.round((verifySum + Number.EPSILON) * 100) / 100;
-    
-    if(verifySum === absoluteBest.rev) {
-        lastCalculatedPonz = absoluteBest.rev; 
-        renderData(absoluteBest.rev, absoluteBest);
-    } else {
-        err.innerText = "수익 계산 무결성 오류 발생. 페이지를 새로고침 해주세요.";
-        err.style.display = "block";
-    }
+    lastCalculatedPonz = absoluteBest.rev; 
+    renderData(absoluteBest.rev, absoluteBest);
 }
 
 function renderData(total, data) {
     const wrap = document.getElementById("resultContainer");
-    
-    let html = `
-        <div class="section-header">상품</div>
-        <div class="result-stats">
-            <div style="font-weight:700; color:var(--text-sub);">최고 예상 수익</div>
-            <div class="total-rev">${total.toFixed(2)} <span>폰즈</span></div>
-            <div style="font-size:13px; font-weight:700; color:var(--text-sub);">전체 트래픽: ${Number(data.totalTraffic.toFixed(1))}p | 글로벌 버프: +${data.globalPriceBuff.toFixed(2)}</div>
-        </div>
-        <div class="item-grid">
-    `;
-
+    let html = `<div class="section-header">상품</div><div class="result-stats"><div style="font-weight:700; color:var(--text-sub);">최고 예상 수익</div><div class="total-rev">${total.toFixed(2)} <span>폰즈</span></div><div style="font-size:13px; font-weight:700; color:var(--text-sub);">전체 트래픽: ${Number(data.totalTraffic.toFixed(1))}p | 글로벌 버프: +${data.globalPriceBuff.toFixed(2)}</div></div><div class="item-grid">`;
     const level = parseInt(document.getElementById("userLevel").value);
-
     data.details.forEach((it, idx) => {
-        const trendTag = it.isTrend ? `<div class="trend-badge">트렌드 적용</div>` : '';
-        const trendClass = it.isTrend ? 'is-trend' : '';
-        const headerColorClass = level >= it.priceUpLevel ? 'is-red' : '';
-        
-        html += `
-            <div class="item-card ${trendClass} ${headerColorClass}">
-                <div class="item-card-top">${it.cafeName}</div>
-                <div class="item-img-wrap">
-                    ${trendTag}
-                    <div class="item-img-inner">
-                        <img src="./images/${it.name}.png" class="item-img" alt="${it.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNlNWU2ZTgiLz48L3N2Zz4='">
-                    </div>
-                </div>
-                
-                <div class="item-name-bar">
-                    <div class="item-name-pill">
-                        <span class="item-name-text">${it.name}</span>
-                    </div>
-                </div>
-                
-                <div class="item-price-bar">+${it.rev.toFixed(3)} 폰즈</div>
-                
-                <button class="btn-detail" onclick="toggleItemDetail(${idx})">상세 내역 확인 ▼</button>
-                <div class="detail-content" id="detail_${idx}">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                        <span>기본가</span>
-                        <span>${it.base.toFixed(2)}</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:var(--yellow-text);">
-                        <span>적용 버프</span>
-                        <span>+${it.appliedPriceBuff.toFixed(2)}</span>
-                    </div>
-                    ${it.isTrend ? `<div style="display:flex; justify-content:space-between; margin-bottom:4px; color:var(--trend-bg);">
-                        <span>트렌드 보너스</span>
-                        <span>+0.75</span>
-                    </div>` : ''}
-                    <div style="display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:1px solid #444; font-weight:bold; font-size:14px; color:#fff;">
-                        <span>최종 단가</span>
-                        <span>${it.final.toFixed(3)}</span>
-                    </div>
-                </div>
-            </div>
-        `;
+        html += `<div class="item-card ${it.isTrend ? 'is-trend' : ''} ${level >= it.priceUpLevel ? 'is-red' : ''}"><div class="item-card-top">${it.cafeName}</div><div class="item-img-wrap">${it.isTrend ? '<div class="trend-badge">트렌드 적용</div>' : ''}<div class="item-img-inner"><img src="./images/${it.name}.png" class="item-img" alt="${it.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNlNWU2ZTgiLz48L3N2Zz4='"></div></div><div class="item-name-bar"><div class="item-name-pill"><span class="item-name-text">${it.name}</span></div></div><div class="item-price-bar">+${it.rev.toFixed(3)} 폰즈</div><button class="btn-detail" onclick="toggleItemDetail(${idx})">상세 내역 확인 ▼</button><div class="detail-content" id="detail_${idx}"><div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>기본가</span><span>${it.base.toFixed(2)}</span></div><div style="display:flex; justify-content:space-between; margin-bottom:4px; color:var(--yellow-text);"><span>적용 버프</span><span>+${it.appliedPriceBuff.toFixed(2)}</span></div>${it.isTrend ? `<div style="display:flex; justify-content:space-between; margin-bottom:4px; color:var(--trend-bg);"><span>트렌드 보너스</span><span>+${it.trendBonus.toFixed(2)}</span></div>` : ''}<div style="display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:1px solid #444; font-weight:bold; font-size:14px; color:#fff;"><span>최종 단가</span><span>${it.final.toFixed(3)}</span></div></div></div>`;
     });
-
-    html += `</div>`;
-    wrap.innerHTML = html;
-    wrap.style.display = "block";
-    wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    wrap.innerHTML = html + `</div>`; wrap.style.display = "block"; wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 window.onload = initUI;
