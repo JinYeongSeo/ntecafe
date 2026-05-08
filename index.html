@@ -218,9 +218,9 @@
         
         .lv-overlay {
             display: none; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 10;
+            z-index: 10; cursor: pointer;
         }
-        .lv-title { font-size:12px; font-weight:bold; color:#fff; margin-bottom:8px; }
+        .lv-title { font-size:12px; font-weight:bold; color:#fff; margin-bottom:8px; pointer-events: none; }
 
         .lv-btn-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; width: 100%; }
         .lv-btn {
@@ -374,10 +374,7 @@
             .main-layout { grid-template-columns: 1fr; }
             header { flex-direction: column; gap: 15px; text-align: center; padding: 15px; }
             .item-grid { grid-template-columns: repeat(2, 1fr); }
-            
-            /* 핵심: 모바일에서는 카페 박스를 1열로 배치하여 좌우 텍스트 짤림 방지 */
             .cafe-grid { grid-template-columns: 1fr; } 
-            
             body { padding: 10px; }
             .timer-wrap { flex-direction: column; }
         }
@@ -737,19 +734,33 @@ function renderSlot(cafeIdx, slotIdx) {
     }
     const lv = charLvHistory[emp] || 5;
     return `
-    <div class="cafe-slot">
-        <div class="slot-img-box" onclick="handleSlotClick(${cafeIdx}, ${slotIdx}, event)">
+    <div class="cafe-slot" onclick="handleSlotClick(${cafeIdx}, ${slotIdx}, event)">
+        <div class="slot-img-box">
             <img src="./images/${emp}.png" alt="${emp}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
             <div class="lv-badge" onclick="toggleOverlay(event, ${cafeIdx}, ${slotIdx})">Lv.${lv} 설정 ▼</div>
         </div>
         
-        <div class="lv-overlay" id="overlay_${cafeIdx}_${slotIdx}" onclick="event.stopPropagation()">
+        <div class="lv-overlay" id="overlay_${cafeIdx}_${slotIdx}" onclick="handleOverlayClick(event, ${cafeIdx}, ${slotIdx})">
             <div class="lv-title">레벨 설정</div>
             <div class="lv-btn-grid">
                 ${[1,2,3,4,5].map(v => `<button class="lv-btn ${lv === v ? 'active' : ''}" onclick="setLevel(event, '${emp}', ${v})">${v}</button>`).join('')}
             </div>
         </div>
     </div>`;
+}
+
+function handleOverlayClick(event, cafeIdx, slotIdx) {
+    event.stopPropagation();
+    
+    const isTouch = window.matchMedia("(hover: none), (pointer: coarse)").matches;
+    
+    if (isTouch) {
+        // 모바일: 오버레이 배경 터치 시 창 닫기
+        document.getElementById(`overlay_${cafeIdx}_${slotIdx}`).style.display = 'none';
+    } else {
+        // PC: 오버레이 배경 클릭 시 캐릭터 해제 (기존 슬롯 클릭과 동일하게 동작)
+        handleSlotClick(cafeIdx, slotIdx, event);
+    }
 }
 
 function toggleOverlay(event, cafeIdx, slotIdx) {
@@ -773,7 +784,6 @@ function handleSlotClick(cafeIdx, slotIdx, event) {
     }
 
     if (cafeDataState[cafeIdx][slotIdx]) {
-        // 이미지가 있는 영역을 터치 시 직원 해제
         cafeDataState[cafeIdx][slotIdx] = null;
         saveData();
         renderCafes();
