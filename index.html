@@ -529,6 +529,13 @@
     </div>
 </div>
 
+<footer>
+    UI & Base Logic Modified by <a href="https://arca.live/u/@%EC%98%A4%EA%B3%A1%EA%B3%A1" target="_blank">오고곡</a> <br>
+    Data Reference: <a href="https://bbs.nga.cn/read.php?tid=46697373&rand=74" target="_blank">NGA (Original Math)</a> | 
+    <a href="https://arca.live/b/nevernesstoeverness/169873800" target="_blank">arca.live</a> <br>
+    <a href="mailto:pridecha5@gmail.com">문의하기</a>
+</footer>
+
 <script>
 const CAFE_NAMES = ["(푸른 수염길점)", "(바로크 거리점)", "(스위트 피어 거리점)", "(무민 거리점)", "(반각 거리점)"];
 
@@ -547,7 +554,7 @@ const RAW_ITEMS = [
     [4, "토마토 에그 크루아상", "메인메뉴", 4.0, 4, 11.4, 26, "밀가루", "날달걀", "토마토", "", ""],
     [5, "참치 샌드위치", "메인메뉴", 4.6, 6, 11.8, 27, "해수어", "상추", "밀가루", "", ""],
     [6, "골든 앰버", "음료", 5.1, 7, 12.2, 28, "「9℃」 커피 원두", "우유", "별사탕", "오렌지", ""],
-    [7, "말차 용암 무스", "디저트", 5.5, 8, 12.6, 29, "「베이킹 파트너」 말차 가루", "「9℃」 커피 원두", "우유", "", ""],
+    [7, "말차 용암 무스", "디저트", 5.5, 8, 12.6, 29, "「베이킹 파트너」 말차 가루", "「9℃」 커피 원두", "우유", "밀가루", ""],
     [8, "생초콜릿 라떼", "음료", 6.0, 9, 13.0, 30, "「9℃」 커피 원두", "「베이킹 파트너」 휘핑크림", "우유", "「베이킹 파트너」 코코아 가루", ""],
     [9, "두툼한 소고기 샌드위치", "메인메뉴", 6.4, 11, 13.5, 31, "신선한 소고기", "밀가루", "상추", "단단한 버터", ""],
     [10, "앙버터 크루아상", "메인메뉴", 7.0, 12, 14.0, 32, "팥", "단단한 버터", "밀가루", "", ""],
@@ -572,6 +579,7 @@ const TREND_LIST = [
 
 const EMP_LIST = ["민트", "하니엘", "아들러", "나나리", "스키아", "에드가", "우미츠키", "사키리", "치즈", "백장", "다포딜"];
 
+// 다른 영역 터치 시 열려있는 레벨 오버레이 일괄 닫기
 document.addEventListener('click', function(e) {
     if (!e.target.closest('.lv-overlay') && !e.target.closest('.lv-badge')) {
         document.querySelectorAll('.lv-overlay').forEach(el => el.style.display = 'none');
@@ -751,8 +759,10 @@ function handleOverlayClick(event, cafeIdx, slotIdx) {
     const isTouch = window.matchMedia("(hover: none), (pointer: coarse)").matches;
     
     if (isTouch) {
+        // 모바일: 오버레이 배경 터치 시 창 닫기
         document.getElementById(`overlay_${cafeIdx}_${slotIdx}`).style.display = 'none';
     } else {
+        // PC: 오버레이 배경 클릭 시 캐릭터 해제 (기존 슬롯 클릭과 동일하게 동작)
         handleSlotClick(cafeIdx, slotIdx, event);
     }
 }
@@ -762,6 +772,7 @@ function toggleOverlay(event, cafeIdx, slotIdx) {
     const overlay = document.getElementById(`overlay_${cafeIdx}_${slotIdx}`);
     const isShowing = overlay.style.display === 'flex';
     
+    // 열려있는 다른 오버레이 전부 닫기
     document.querySelectorAll('.lv-overlay').forEach(el => el.style.display = 'none');
     
     if (!isShowing) {
@@ -777,6 +788,7 @@ function handleSlotClick(cafeIdx, slotIdx, event) {
     }
 
     if (cafeDataState[cafeIdx][slotIdx]) {
+        // 이미지가 있는 영역을 터치 시 직원 해제
         cafeDataState[cafeIdx][slotIdx] = null;
         saveData();
         renderCafes();
@@ -1111,6 +1123,7 @@ function runCalculator() {
             let isTrend = false;
             let trendBonus = 0;
             
+            // 트렌드 로직 분기 처리
             if (trend) {
                 if (trend.startsWith("메인 메뉴")) {
                     if (item.category === "메인메뉴") { isTrend = true; trendBonus = 1.0; }
@@ -1128,6 +1141,7 @@ function runCalculator() {
             
             const finalPrice = item.basePrice + localPriceBuff + trendBonus;
             
+            // 모든 트래픽 버프 합산 후 마지막에 우미츠키 배율 곱셈 처리
             const totalTraffic = (2400 + localTrafficBuff) * umiMult;
             const hourlyRev = finalPrice * (totalTraffic / 100);
             
