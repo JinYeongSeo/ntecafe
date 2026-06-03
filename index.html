@@ -755,15 +755,16 @@ function renderSlot(cafeIdx, slotIdx) {
 }
 
 function handleOverlayClick(event, cafeIdx, slotIdx) {
+    // 클릭된 요소가 레벨 버튼이라면 오버레이 클릭 이벤트를 무시
+    if (event.target.closest('.lv-btn')) return;
+    
     event.stopPropagation();
     
     const isTouch = window.matchMedia("(hover: none), (pointer: coarse)").matches;
     
     if (isTouch) {
-        // 모바일: 오버레이 배경 터치 시 창 닫기
         document.getElementById(`overlay_${cafeIdx}_${slotIdx}`).style.display = 'none';
     } else {
-        // PC: 오버레이 배경 클릭 시 캐릭터 해제 (기존 슬롯 클릭과 동일하게 동작)
         handleSlotClick(cafeIdx, slotIdx, event);
     }
 }
@@ -786,6 +787,13 @@ function handleSlotClick(cafeIdx, slotIdx, event) {
     if (isNaN(level)) { 
         alert("관리 레벨을 먼저 선택해 주시기 바랍니다."); 
         return; 
+    }
+
+    // 이벤트 타겟이 레벨 설정 관련 요소라면 슬롯 해제 동작을 방어함
+    if (event && event.target) {
+        if (event.target.closest('.lv-btn') || event.target.closest('.lv-badge')) {
+            return;
+        }
     }
 
     if (cafeDataState[cafeIdx][slotIdx]) {
@@ -838,6 +846,7 @@ function closeCharModal(e) {
 }
 
 function setLevel(e, emp, lv) {
+    e.preventDefault();
     e.stopPropagation();
     charLvHistory[emp] = lv; 
     saveData();
